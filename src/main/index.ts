@@ -2,22 +2,26 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { saveApiKey } from './libs/store'
 
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 1200,
+    height: 900,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      nodeIntegration: false,
+      contextIsolation: true
     }
   })
 
   mainWindow.on('ready-to-show', () => {
+    // ウィンドウを最大化
+    mainWindow.maximize()
     mainWindow.show()
   })
 
@@ -51,6 +55,19 @@ app.whenReady().then(() => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
+
+  ipcMain.handle(
+    'save-api-key',
+    async (
+      _event,
+      apiKey: {
+        devTo: string
+        openAI: string
+      }
+    ) => {
+      saveApiKey(apiKey)
+    }
+  )
 
   createWindow()
 
