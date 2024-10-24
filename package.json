@@ -23,9 +23,12 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
+    "@radix-ui/react-checkbox": "^1.1.2",
     "@radix-ui/react-slot": "^1.1.0",
+    "axios": "^1.7.7",
     "electron-updater": "^6.1.7",
-    "lucide-react": "^0.453.0"
+    "lucide-react": "^0.453.0",
+    "react-router-dom": "^6.27.0"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^2.0.0",

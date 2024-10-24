@@ -2,7 +2,8 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { saveApiKey } from './libs/store'
+import { loadApiKey, saveApiKey } from './libs/store'
+import { searchDevTo } from './libs/devto'
 
 function createWindow(): void {
   // Create the browser window.
@@ -56,6 +57,7 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
+  // APIキーの保存処理
   ipcMain.handle(
     'save-api-key',
     async (
@@ -66,6 +68,31 @@ app.whenReady().then(() => {
       }
     ) => {
       saveApiKey(apiKey)
+    }
+  )
+
+  // APIキーの読み込み処理
+  ipcMain.handle('load-api-key', async () => {
+    return loadApiKey()
+  })
+
+  // 検索処理
+  ipcMain.handle(
+    'search',
+    async (
+      _event,
+      object: {
+        apiKey: string
+        tag: string
+        count: number
+        range: number
+      }
+    ) => {
+      return await searchDevTo(object.apiKey, {
+        tag: object.tag,
+        count: object.count,
+        range: object.range
+      })
     }
   )
 

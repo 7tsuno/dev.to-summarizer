@@ -1,23 +1,38 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { SearchIcon, ArrowLeftIcon, Settings, ChevronRight } from 'lucide-react'
+import { Checkbox } from './ui/checkbox'
+
+declare global {
+  interface Window {
+    electron: {
+      invoke: <T, U>(channel: string, data?: T) => Promise<U>
+    }
+  }
+}
 
 export function AiTrendTranslator(): JSX.Element {
   const [formState, setFormState] = useState({
-    tags: 'generativeai',
+    tag: 'ai',
     count: '10',
     range: '10'
   })
 
-  const [formErrors, setFormErrors] = useState({
-    tags: '',
+  const [historyState, setHistoryState] = useState({
+    tag: '',
     count: '',
     range: ''
   })
 
-  const [isFormValid, setIsFormValid] = useState(false)
+  const [formErrors, setFormErrors] = useState({
+    tag: '',
+    count: '',
+    range: ''
+  })
+
+  const [isFormValid, setIsFormValid] = useState(true)
   const [currentView, setCurrentView] = useState('main') // 'main', 'history', 'settings', or 'full-history'
 
   const [apiKeys, setApiKeys] = useState({
@@ -25,14 +40,38 @@ export function AiTrendTranslator(): JSX.Element {
     openAI: ''
   })
 
+  const [blogList, setBlogList] = useState<
+    Array<{
+      id: number
+      title: string
+      published_timestamp: Date
+    }>
+  >([])
+
+  const [selectedArticles, setSelectedArticles] = useState<number[]>([])
+
+  // アプリロード時にAPIキーを取得
+  useEffect(() => {
+    const loadAPIKeys = async (): Promise<void> => {
+      const loadedApiKeys = await window.electron.invoke<
+        undefined,
+        { devTo: string; openAI: string }
+      >('load-api-key')
+      if (loadedApiKeys) {
+        setApiKeys(loadedApiKeys)
+      }
+    }
+    loadAPIKeys()
+  }, [])
+
   const [apiKeyError, setApiKeyError] = useState('')
 
   const validateField = (name: string, value: string): void => {
-    if (name === 'tags') {
+    if (name === 'tag') {
       if (value.trim() === '') {
-        setFormErrors((prev) => ({ ...prev, tags: 'タグを1つ以上入力してください' }))
+        setFormErrors((prev) => ({ ...prev, tag: 'タグを1つ以上入力してください' }))
       } else {
-        setFormErrors((prev) => ({ ...prev, tags: '' }))
+        setFormErrors((prev) => ({ ...prev, tag: '' }))
       }
     } else if (name === 'count') {
       const count = parseInt(value)
@@ -52,10 +91,10 @@ export function AiTrendTranslator(): JSX.Element {
   }
 
   const checkFormValidity = (): void => {
-    const tagsValid = formState.tags.trim() !== ''
+    const tagValid = formState.tag.trim() !== ''
     const countValid = parseInt(formState.count) >= 1 && parseInt(formState.count) <= 30
     const rangeValid = parseInt(formState.range) >= 1
-    setIsFormValid(tagsValid && countValid && rangeValid)
+    setIsFormValid(tagValid && countValid && rangeValid)
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -93,11 +132,21 @@ export function AiTrendTranslator(): JSX.Element {
     return true
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault()
+
     if (checkApiKeys()) {
-      // ここに記事検索と要約のロジックを実装します
-      console.log('記事を検索して要約します', formState)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await window.electron.invoke<any, Array<any>>('search', {
+        apiKeys,
+        tag: formState.tag,
+        count: parseInt(formState.count),
+        range: parseInt(formState.range)
+      })
+
+      setHistoryState(formState)
+      setBlogList(result)
+      setCurrentView('history')
     }
   }
 
@@ -110,27 +159,29 @@ export function AiTrendTranslator(): JSX.Element {
     })
   }
 
-  // この部分は実際のアプリケーションでは動的に生成されるデータです
-  const summaries = [
-    { id: 1, title: '生成AIの最新トレンド', executedAt: '2023-10-24T14:30:00Z' },
-    { id: 2, title: 'AIと倫理：今後の課題', executedAt: '2023-10-23T09:15:00Z' },
-    { id: 3, title: '自然言語処理の進化', executedAt: '2023-10-22T18:45:00Z' }
-  ]
-
   const summariseHistory = [
-    { id: 1, executedAt: '2023-10-24T14:30:00Z', tags: 'generativeai, ai', count: 10, range: 7 },
-    { id: 2, executedAt: '2023-10-23T09:15:00Z', tags: 'machinelearning', count: 5, range: 14 },
-    { id: 3, executedAt: '2023-10-22T18:45:00Z', tags: 'nlp, transformers', count: 15, range: 30 },
-    { id: 4, executedAt: '2023-10-21T11:30:00Z', tags: 'deeplearning', count: 8, range: 10 },
-    { id: 5, executedAt: '2023-10-20T16:00:00Z', tags: 'computervision', count: 12, range: 20 },
+    { id: 1, executedAt: '2023-10-24T14:30:00Z', tag: 'generativeai, ai', count: 10, range: 7 },
+    { id: 2, executedAt: '2023-10-23T09:15:00Z', tag: 'machinelearning', count: 5, range: 14 },
+    { id: 3, executedAt: '2023-10-22T18:45:00Z', tag: 'nlp, transformers', count: 15, range: 30 },
+    { id: 4, executedAt: '2023-10-21T11:30:00Z', tag: 'deeplearning', count: 8, range: 10 },
+    { id: 5, executedAt: '2023-10-20T16:00:00Z', tag: 'computervision', count: 12, range: 20 },
     {
       id: 6,
       executedAt: '2023-10-19T10:45:00Z',
-      tags: 'reinforcementlearning',
+      tag: 'reinforcementlearning',
       count: 6,
       range: 15
     }
   ]
+  const handleArticleSelect = (id: number): void => {
+    setSelectedArticles((prev) =>
+      prev.includes(id) ? prev.filter((articleId) => articleId !== id) : [...prev, id]
+    )
+  }
+
+  const handleTranslateAndSummarize = (): void => {
+    console.log('選択された記事を翻訳して要約します:', selectedArticles)
+  }
 
   const renderSummaryList = (summaries: typeof summariseHistory, limit?: number): JSX.Element => {
     const summariesToShow = limit ? summaries.slice(0, limit) : summaries
@@ -158,7 +209,7 @@ export function AiTrendTranslator(): JSX.Element {
               </p>
               <div className="mt-2 text-xs">
                 <p>
-                  <span className="font-semibold">タグ:</span> {summary.tags}
+                  <span className="font-semibold">タグ:</span> {summary.tag}
                 </p>
                 <p>
                   <span className="font-semibold">件数:</span> {summary.count}
@@ -197,24 +248,22 @@ export function AiTrendTranslator(): JSX.Element {
                 <CardContent>
                   <form className="space-y-4" onSubmit={handleSubmit}>
                     <div>
-                      <label htmlFor="tags" className="block text-sm font-medium mb-1">
+                      <label htmlFor="tag" className="block text-sm font-medium mb-1">
                         タグで記事を検索
                       </label>
                       <Input
-                        id="tags"
-                        name="tags"
-                        placeholder="generativeai, ai"
-                        className={`w-full ${formErrors.tags ? 'border-red-500' : ''}`}
-                        value={formState.tags}
+                        id="tag"
+                        name="tag"
+                        placeholder="ai"
+                        className={`w-full ${formErrors.tag ? 'border-red-500' : ''}`}
+                        value={formState.tag}
                         onChange={handleInputChange}
                         onBlur={handleInputBlur}
                       />
-                      {formErrors.tags && (
-                        <p className="text-sm text-red-500 mt-1">{formErrors.tags}</p>
+                      {formErrors.tag && (
+                        <p className="text-sm text-red-500 mt-1">{formErrors.tag}</p>
                       )}
-                      <p className="text-sm text-muted-foreground mt-1">
-                        カンマ区切りでタグを指定してください。
-                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">タグを指定してください。</p>
                     </div>
                     <div>
                       <label htmlFor="count" className="block text-sm font-medium mb-1">
@@ -303,42 +352,72 @@ export function AiTrendTranslator(): JSX.Element {
               </CardHeader>
               <CardContent>
                 <ul className="list-disc list-inside mb-4">
-                  <li>タグ: {formState.tags || 'なし'}</li>
-                  <li>取得件数: {formState.count}件</li>
-                  <li>トレンド記事の期間: 過去{formState.range}日間</li>
+                  <li>タグ: {historyState.tag || 'なし'}</li>
+                  <li>取得件数: {historyState.count}件</li>
+                  <li>トレンド記事の期間: 過去{historyState.range}日間</li>
                 </ul>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>要約結果記事一覧</CardTitle>
+                <CardTitle>記事一覧</CardTitle>
               </CardHeader>
               <CardContent>
+                <div className="flex justify-between items-center mb-4">
+                  <p className="text-sm">選択中: {selectedArticles.length} 件</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const allIds = blogList.map((blog) => blog.id)
+                      setSelectedArticles(selectedArticles.length === allIds.length ? [] : allIds)
+                    }}
+                  >
+                    {selectedArticles.length === blogList.length ? 'すべて選択解除' : 'すべて選択'}
+                  </Button>
+                </div>
                 <ul className="space-y-4">
-                  {summaries.map((summary) => (
-                    <li key={summary.id} className="border-b pb-4 last:border-b-0">
-                      <h3 className="text-lg font-semibold mb-2">
-                        <a href="#" className="hover:underline">
-                          {summary.title}
-                        </a>
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        要約実行日時:{' '}
-                        {new Date(summary.executedAt).toLocaleString('ja-JP', {
-                          year: 'numeric',
-                          month: '2-digit',
-                          day: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                      <Button variant="outline" size="sm">
-                        要約を表示
-                      </Button>
+                  {blogList.map((blog) => (
+                    <li key={blog.id} className="border-b pb-4 last:border-b-0">
+                      <div className="flex items-start space-x-4">
+                        <Checkbox
+                          id={`article-${blog.id}`}
+                          checked={selectedArticles.includes(blog.id)}
+                          onCheckedChange={() => handleArticleSelect(blog.id)}
+                          className="mt-1"
+                        />
+                        <div className="flex-1">
+                          <label
+                            htmlFor={`article-${blog.id}`}
+                            className="text-lg font-semibold mb-2 block hover:underline cursor-pointer"
+                          >
+                            {blog.title}
+                          </label>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            {' '}
+                            {new Date(blog.published_timestamp).toLocaleString('ja-JP', {
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      </div>
                     </li>
                   ))}
                 </ul>
+                <div className="mt-6">
+                  <Button
+                    className="w-full"
+                    onClick={handleTranslateAndSummarize}
+                    disabled={selectedArticles.length === 0}
+                  >
+                    選択した記事を翻訳して要約する
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -409,22 +488,6 @@ export function AiTrendTranslator(): JSX.Element {
           </div>
         )}
       </main>
-
-      <footer className="bg-muted mt-8 py-4">
-        <div className="container mx-auto text-center text-sm text-muted-foreground">
-          <a href="#" className="hover:underline">
-            利用規約
-          </a>{' '}
-          |{' '}
-          <a href="#" className="hover:underline">
-            プライバシーポリシー
-          </a>{' '}
-          |{' '}
-          <a href="#" className="hover:underline">
-            お問い合わせ
-          </a>
-        </div>
-      </footer>
     </div>
   )
 }

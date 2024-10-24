@@ -13,7 +13,7 @@ export function saveApiKey(apiKey: { devTo: string; openAI: string }): void {
 }
 
 // APIキーを読み込む
-export function loadApiKey(): string | null {
+export function loadApiKey(): { devTo: string; openAI: string } | null {
   if (fs.existsSync(configFilePath)) {
     const config = JSON.parse(fs.readFileSync(configFilePath, 'utf-8'))
     return config.apiKey
