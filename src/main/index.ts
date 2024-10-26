@@ -2,8 +2,11 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { loadApiKey, saveApiKey } from './libs/store'
-import { searchDevTo } from './libs/devto'
+import { getArticleByIds, searchDevTo } from './libs/devto'
+import { listHistories, loadHistory } from './libs/history'
+import { summarizeBlogs } from './libs/blog'
+import Store from 'electron-store'
+const store = new Store({ encryptionKey: 'your-encryption-key' })
 
 function createWindow(): void {
   // Create the browser window.
@@ -16,7 +19,8 @@ function createWindow(): void {
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      sandbox: true
     }
   })
 
@@ -57,25 +61,6 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
-  // APIキーの保存処理
-  ipcMain.handle(
-    'save-api-key',
-    async (
-      _event,
-      apiKey: {
-        devTo: string
-        openAI: string
-      }
-    ) => {
-      saveApiKey(apiKey)
-    }
-  )
-
-  // APIキーの読み込み処理
-  ipcMain.handle('load-api-key', async () => {
-    return loadApiKey()
-  })
-
   // 検索処理
   ipcMain.handle(
     'search',
@@ -95,6 +80,30 @@ app.whenReady().then(() => {
       })
     }
   )
+
+  ipcMain.handle('get-history', () => {
+    return listHistories()
+  })
+
+  ipcMain.handle('load-history', (_event, timestamp: string) => {
+    return loadHistory(timestamp)
+  })
+
+  ipcMain.handle(
+    'summarize',
+    async (_event, data: { ids: Array<number>; openAIKey: string; devToKey: string }) => {
+      const articles = await getArticleByIds(data.devToKey, data.ids)
+      summarizeBlogs(articles, data.openAIKey)
+    }
+  )
+
+  ipcMain.handle('getKey', (_event, key: string) => {
+    return store.get(key)
+  })
+
+  ipcMain.handle('saveKey', (_event, key: string, value: string) => {
+    store.set(key, value)
+  })
 
   createWindow()
 

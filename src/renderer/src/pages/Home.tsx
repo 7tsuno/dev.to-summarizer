@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { SearchIcon, Settings, ChevronRight } from 'lucide-react'
 import { invoke } from '@renderer/utils/IPC'
 import { useNavigate } from 'react-router-dom'
+import { getKey } from '@renderer/utils/store'
 
 export function Home(): JSX.Element {
   const navigate = useNavigate()
@@ -25,8 +26,17 @@ export function Home(): JSX.Element {
 
   const [apiKeyError, setApiKeyError] = useState('')
 
+  const [summariseHistory, setSummariseHistory] = useState<
+    Array<{
+      executedAt: string
+      tag: string
+      count: number
+      range: number
+    }>
+  >([])
+
   const apiKeys = useMemo(async () => {
-    return await invoke<undefined, { devTo: string; openAI: string }>('load-api-key')
+    return { devTo: await getKey('devTo'), openAI: await getKey('openAI') }
   }, [])
 
   const validateField = (name: string, value: string): void => {
@@ -71,7 +81,7 @@ export function Home(): JSX.Element {
 
     const devToApiKey = (await apiKeys).devTo
 
-    if (devToApiKey === '') {
+    if (devToApiKey === '' || devToApiKey === undefined) {
       setApiKeyError('APIキーが設定されていません')
       return
     }
@@ -87,63 +97,32 @@ export function Home(): JSX.Element {
     })
   }
 
-  const summariseHistory = [
-    {
-      id: 1,
-      executedAt: new Date('2023-10-24T14:30:00Z'),
-      tag: 'generativeai, ai',
-      count: 10,
-      range: 7
-    },
-    {
-      id: 2,
-      executedAt: new Date('2023-10-24T14:30:00Z'),
-      tag: 'generativeai, ai',
-      count: 10,
-      range: 7
-    },
-    {
-      id: 3,
-      executedAt: new Date('2023-10-24T14:30:00Z'),
-      tag: 'generativeai, ai',
-      count: 10,
-      range: 7
-    },
-    {
-      id: 4,
-      executedAt: new Date('2023-10-24T14:30:00Z'),
-      tag: 'generativeai, ai',
-      count: 10,
-      range: 7
-    },
-    {
-      id: 5,
-      executedAt: new Date('2023-10-24T14:30:00Z'),
-      tag: 'generativeai, ai',
-      count: 10,
-      range: 7
-    },
-    {
-      id: 6,
-      executedAt: new Date('2023-10-24T14:30:00Z'),
-      tag: 'generativeai, ai',
-      count: 10,
-      range: 7
-    }
-  ]
+  useEffect(() => {
+    invoke<undefined, Array<{ executedAt: string; tag: string; count: number; range: number }>>(
+      'get-history'
+    ).then((histories) => setSummariseHistory(histories))
+  }, [])
 
   const renderSummaryList = (summaries: typeof summariseHistory, limit?: number): JSX.Element => {
     const summariesToShow = limit ? summaries.slice(0, limit) : summaries
     return (
       <ul className="space-y-3">
-        {summariesToShow.map((summary) => (
-          <li key={summary.id} className="border-b last:border-b-0 pb-3 last:pb-0">
+        {summariesToShow.map((summary, index) => (
+          <li key={index} className="border-b last:border-b-0 pb-3 last:pb-0">
             <a
               href="#"
               className="block hover:bg-muted p-2 rounded transition-colors"
               onClick={(e) => {
                 e.preventDefault()
-                navigate('resultList', { state: { ...summary } })
+                navigate('resultList', {
+                  state: {
+                    tag: summary.tag,
+                    count: summary.count,
+                    range: summary.range,
+                    executedAt: new Date(summary.executedAt),
+                    isHistory: true
+                  }
+                })
               }}
             >
               <p className="text-xs text-muted-foreground mt-1">
@@ -152,7 +131,8 @@ export function Home(): JSX.Element {
                   month: '2-digit',
                   day: '2-digit',
                   hour: '2-digit',
-                  minute: '2-digit'
+                  minute: '2-digit',
+                  second: '2-digit'
                 })}
               </p>
               <div className="mt-2 text-xs">
@@ -160,7 +140,7 @@ export function Home(): JSX.Element {
                   <span className="font-semibold">タグ:</span> {summary.tag}
                 </p>
                 <p>
-                  <span className="font-semibold">件数:</span> {summary.count}
+                  <span className="font-semibold">件数:</span> {summary.count}件
                 </p>
                 <p>
                   <span className="font-semibold">期間:</span> {summary.range}日間
@@ -178,10 +158,7 @@ export function Home(): JSX.Element {
       <header className="bg-primary text-primary-foreground p-4">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold">dev.to trend summarizer</h1>
-          <Button
-            variant="ghost"
-            onClick={async () => navigate('settings', { state: { apiKeys: await apiKeys } })}
-          >
+          <Button variant="ghost" onClick={async () => navigate('settings')}>
             <Settings className="h-5 w-5 mr-2" />
             設定
           </Button>

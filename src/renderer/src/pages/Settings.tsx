@@ -3,26 +3,21 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { ArrowLeftIcon, Settings as SettingsIcon } from 'lucide-react'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { invoke } from '@renderer/utils/IPC'
+import { useNavigate } from 'react-router-dom'
+import { getKey, saveKey } from '@renderer/utils/store'
 
 export function Settings(): JSX.Element {
   const navigate = useNavigate()
-  const location = useLocation()
 
-  const state = location.state as {
-    apiKeys?: {
-      devTo: string
-      openAI: string
-    }
-  }
   const [apiKeys, setApiKeys] = useState({
     devTo: '',
     openAI: ''
   })
 
   useEffect(() => {
-    setApiKeys(state.apiKeys || { devTo: '', openAI: '' })
+    ;(async (): Promise<void> => {
+      setApiKeys({ devTo: await getKey('devTo'), openAI: await getKey('openAI') })
+    })()
   }, [])
 
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -32,10 +27,8 @@ export function Settings(): JSX.Element {
 
   const handleApiKeySave = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault()
-    invoke('save-api-key', {
-      devTo: apiKeys.devTo,
-      openAI: apiKeys.openAI
-    })
+    saveKey('devTo', apiKeys.devTo)
+    saveKey('openAI', apiKeys.openAI)
     navigate('/')
   }
 

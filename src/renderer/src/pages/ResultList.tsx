@@ -1,24 +1,28 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { ArrowLeftIcon, Settings } from 'lucide-react'
 import { Checkbox } from '../components/ui/checkbox'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { invoke } from '@renderer/utils/IPC'
+import { getKey } from '@renderer/utils/store'
 
 export function ResultList(): JSX.Element {
   const navigate = useNavigate()
   const location = useLocation()
+
+  const apiKeys = useMemo(async () => {
+    return { devTo: await getKey('devTo'), openAI: await getKey('openAI') }
+  }, [])
+
   const state = location.state as {
     tag: string
     count: string
     range: string
     executedAt: Date
-    id?: string
+    isHistory?: boolean
     apiKey?: string
   }
-
-  const [loaded, setLoaded] = useState(false)
 
   const [blogList, setBlogList] = useState<
     Array<{
@@ -33,10 +37,11 @@ export function ResultList(): JSX.Element {
   useEffect(() => {
     let ignore = false
     const onload = async (): Promise<void> => {
-      if (state.id) {
-        // ファイル読み込み
+      if (state.isHistory) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const result = await invoke<any, Array<any>>('load-history', state.executedAt.toISOString())
+        setBlogList(result)
       } else if (!ignore) {
-        setLoaded(true)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result = await invoke<any, Array<any>>('search', {
           apiKey: state.apiKey,
@@ -59,8 +64,15 @@ export function ResultList(): JSX.Element {
     )
   }
 
-  const handleTranslateAndSummarize = (): void => {
-    console.log('選択された記事を翻訳して要約します:', selectedArticles)
+  const handleTranslateAndSummarize = async (): Promise<void> => {
+    const { devTo, openAI } = await apiKeys
+
+    invoke('summarize', {
+      ids: selectedArticles,
+      devToKey: devTo,
+      openAIKey: openAI
+    })
+    navigate('/')
   }
 
   return (

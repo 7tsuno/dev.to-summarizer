@@ -19,6 +19,37 @@ export async function searchDevTo(
       top: searchObject.range
     }
   })
-  saveHistory(new Date().toISOString(), response.data)
+  saveHistory(new Date().toISOString(), response.data, {
+    tag: searchObject.tag,
+    count: searchObject.count,
+    range: searchObject.range
+  })
   return response.data
+}
+
+export async function getArticleByIds(
+  key: string,
+  ids: Array<number>
+): Promise<
+  Array<{
+    id: number
+    title: string
+    body: string
+  }>
+> {
+  return Promise.all(
+    ids.map(async (id) => {
+      const response = await axios.get(`${API_BASE}${ARTICLES}/${id}`, {
+        headers: {
+          accept: 'application/vnd.forem.api-v1+json',
+          'api-key': key
+        }
+      })
+      return {
+        id,
+        title: response.data.title,
+        body: response.data.body_markdown
+      }
+    })
+  )
 }
