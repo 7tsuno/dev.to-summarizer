@@ -1,19 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { ArrowLeftIcon, Settings } from 'lucide-react'
+import { ArrowLeftIcon, ChevronDown, ChevronUp, Settings } from 'lucide-react'
 import { Checkbox } from '../components/ui/checkbox'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { invoke } from '@renderer/utils/IPC'
-import { getKey } from '@renderer/utils/store'
+import { getBatchId, saveBatchId } from '@renderer/utils/store'
+import ReactMarkdown from 'react-markdown'
 
 export function ResultList(): JSX.Element {
   const navigate = useNavigate()
   const location = useLocation()
-
-  const apiKeys = useMemo(async () => {
-    return { devTo: await getKey('devTo'), openAI: await getKey('openAI') }
-  }, [])
 
   const state = location.state as {
     tag: string
@@ -21,18 +18,23 @@ export function ResultList(): JSX.Element {
     range: string
     executedAt: Date
     isHistory?: boolean
-    apiKey?: string
   }
 
   const [blogList, setBlogList] = useState<
     Array<{
       id: number
       title: string
+      batchId?: string
+      blogData?: {
+        title: string
+        summary: string
+      }
       published_timestamp: Date
     }>
   >([])
 
   const [selectedArticles, setSelectedArticles] = useState<number[]>([])
+  const [expandedSummaries, setExpandedSummaries] = useState<number[]>([])
 
   useEffect(() => {
     let ignore = false
@@ -40,16 +42,41 @@ export function ResultList(): JSX.Element {
       if (state.isHistory) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result = await invoke<any, Array<any>>('load-history', state.executedAt.toISOString())
-        setBlogList(result)
+        const convertedResult = await Promise.all(
+          result.map(async (blog) => ({
+            ...blog,
+            batchId: await getBatchId(blog.id),
+            blogData: await invoke<
+              string,
+              {
+                title: string
+                summary: string
+              }
+            >('loadBlog', String(blog.id))
+          }))
+        )
+        setBlogList(convertedResult)
       } else if (!ignore) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result = await invoke<any, Array<any>>('search', {
-          apiKey: state.apiKey,
           tag: state.tag,
           count: parseInt(state.count),
           range: parseInt(state.range)
         })
-        setBlogList(result)
+        const convertedResult = await Promise.all(
+          result.map(async (blog) => ({
+            ...blog,
+            batchId: await getBatchId(blog.id),
+            blogData: await invoke<
+              string,
+              {
+                title: string
+                summary: string
+              }
+            >('loadBlog', String(blog.id))
+          }))
+        )
+        setBlogList(convertedResult)
       }
     }
     onload()
@@ -65,22 +92,58 @@ export function ResultList(): JSX.Element {
   }
 
   const handleTranslateAndSummarize = async (): Promise<void> => {
-    const { devTo, openAI } = await apiKeys
+    const batchId = await invoke<unknown, string>('summarize', selectedArticles)
+    saveBatchId(batchId, selectedArticles)
 
-    invoke('summarize', {
-      ids: selectedArticles,
-      devToKey: devTo,
-      openAIKey: openAI
-    })
+    setBlogList(
+      blogList.map((blog) => {
+        if (selectedArticles.includes(blog.id)) {
+          return { ...blog, batchId }
+        }
+        return blog
+      })
+    )
+
     navigate('/')
   }
+
+  const checkSummarized = async (id: string): Promise<void> => {
+    const status = await invoke<string, string>('getBatchStatus', id)
+    if (status === 'completed') {
+      const newBlogList = await Promise.all(
+        blogList.map(async (blog) => {
+          if (blog.batchId === id) {
+            const blogData = await invoke<
+              string,
+              {
+                title: string
+                summary: string
+              }
+            >('loadBlog', String(blog.id))
+            return { ...blog, blogData }
+          }
+          return blog
+        })
+      )
+
+      setBlogList(newBlogList)
+    }
+  }
+
+  const toggleSummary = (id: number): void => {
+    setExpandedSummaries((prev) =>
+      prev.includes(id) ? prev.filter((summaryId) => summaryId !== id) : [...prev, id]
+    )
+  }
+
+  console.log(blogList)
 
   return (
     <div className="flex flex-col min-h-screen">
       <header className="bg-primary text-primary-foreground p-4">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold">dev.to trend summarizer</h1>
-          <Button variant="ghost" onClick={() => navigate('settings')}>
+          <Button variant="ghost" onClick={() => navigate('/settings')}>
             <Settings className="h-5 w-5 mr-2" />
             設定
           </Button>
@@ -120,11 +183,16 @@ export function ResultList(): JSX.Element {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const allIds = blogList.map((blog) => blog.id)
+                    const allIds = blogList
+                      .filter((blog) => blog.batchId === undefined)
+                      .map((blog) => blog.id)
                     setSelectedArticles(selectedArticles.length === allIds.length ? [] : allIds)
                   }}
                 >
-                  {selectedArticles.length === blogList.length ? 'すべて選択解除' : 'すべて選択'}
+                  {selectedArticles.length ===
+                  blogList.filter((s) => s.batchId === undefined).length
+                    ? 'すべて選択解除'
+                    : 'すべて選択'}
                 </Button>
               </div>
               <ul className="space-y-4">
@@ -135,6 +203,7 @@ export function ResultList(): JSX.Element {
                         id={`article-${blog.id}`}
                         checked={selectedArticles.includes(blog.id)}
                         onCheckedChange={() => handleArticleSelect(blog.id)}
+                        disabled={blog.batchId !== undefined}
                         className="mt-1"
                       />
                       <div className="flex-1">
@@ -154,6 +223,46 @@ export function ResultList(): JSX.Element {
                             minute: '2-digit'
                           })}
                         </p>
+                        {blog.batchId && blog.blogData === undefined && (
+                          <div className="flex-1">
+                            <p className="text-sm text-muted-foreground mb-2">要約リクエスト済み</p>
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => blog.batchId && checkSummarized(blog.batchId)}
+                            >
+                              要約状況を確認する
+                            </Button>
+                          </div>
+                        )}
+                        {blog.blogData && (
+                          <div className="mt-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => toggleSummary(blog.id)}
+                              className="mb-2"
+                            >
+                              要約を{expandedSummaries.includes(blog.id) ? '非表示' : '表示'}
+                              {expandedSummaries.includes(blog.id) ? (
+                                <ChevronUp className="ml-2 h-4 w-4" />
+                              ) : (
+                                <ChevronDown className="ml-2 h-4 w-4" />
+                              )}
+                            </Button>
+                            {expandedSummaries.includes(blog.id) && (
+                              <div className="bg-gray-100 p-4 rounded-md">
+                                <h4 className="font-semibold mb-2">
+                                  翻訳タイトル: {blog.blogData.title}
+                                </h4>
+                                <div className="prose prose-sm max-w-none">
+                                  <ReactMarkdown>{blog.blogData.summary}</ReactMarkdown>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </li>

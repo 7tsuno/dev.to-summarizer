@@ -4,8 +4,9 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { getArticleByIds, searchDevTo } from './libs/devto'
 import { listHistories, loadHistory } from './libs/history'
-import { summarizeBlogs } from './libs/blog'
+import { loadBlog, summarizeBlogs } from './libs/blog'
 import Store from 'electron-store'
+import { getBatchStatus } from './libs/gpt'
 const store = new Store({ encryptionKey: 'your-encryption-key' })
 
 function createWindow(): void {
@@ -67,13 +68,12 @@ app.whenReady().then(() => {
     async (
       _event,
       object: {
-        apiKey: string
         tag: string
         count: number
         range: number
       }
     ) => {
-      return await searchDevTo(object.apiKey, {
+      return await searchDevTo({
         tag: object.tag,
         count: object.count,
         range: object.range
@@ -89,13 +89,10 @@ app.whenReady().then(() => {
     return loadHistory(timestamp)
   })
 
-  ipcMain.handle(
-    'summarize',
-    async (_event, data: { ids: Array<number>; openAIKey: string; devToKey: string }) => {
-      const articles = await getArticleByIds(data.devToKey, data.ids)
-      summarizeBlogs(articles, data.openAIKey)
-    }
-  )
+  ipcMain.handle('summarize', async (_event, ids: Array<number>) => {
+    const articles = await getArticleByIds(ids)
+    return await summarizeBlogs(articles)
+  })
 
   ipcMain.handle('getKey', (_event, key: string) => {
     return store.get(key)
@@ -103,6 +100,14 @@ app.whenReady().then(() => {
 
   ipcMain.handle('saveKey', (_event, key: string, value: string) => {
     store.set(key, value)
+  })
+
+  ipcMain.handle('getBatchStatus', async (_event, batchId: string) => {
+    return await getBatchStatus(batchId)
+  })
+
+  ipcMain.handle('loadBlog', async (_event, id: string) => {
+    return loadBlog(id)
   })
 
   createWindow()

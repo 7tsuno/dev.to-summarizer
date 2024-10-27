@@ -2,6 +2,8 @@ import fs from 'fs'
 import path from 'path'
 import OpenAI from 'openai'
 import { app } from 'electron'
+import { getOpenAIKey } from './keyStore'
+import { saveBlog } from './blog'
 
 export async function createBatchRequest(
   requests: Array<{
@@ -10,12 +12,11 @@ export async function createBatchRequest(
     url: string
     body: object
   }>,
-  apiKey: string,
   endpoint: '/v1/chat/completions' | '/v1/embeddings' | '/v1/completions' = '/v1/chat/completions'
 ): Promise<string> {
   // OpenAIクライアントの初期化
   const openai = new OpenAI({
-    apiKey: apiKey
+    apiKey: getOpenAIKey()
   })
 
   // バッチ入力ファイルのパスを設定
@@ -58,6 +59,21 @@ export async function createBatchRequest(
   } finally {
     fs.unlinkSync(batchInputFilePath)
   }
+}
+
+export async function getBatchStatus(batchId: string): Promise<string> {
+  const openAI = new OpenAI({ apiKey: getOpenAIKey() })
+  const batch = await openAI.batches.retrieve(batchId)
+  if (batch.status === 'completed' && batch.output_file_id) {
+    const fileId = batch.output_file_id
+    const fileResponse = await openAI.files.content(fileId)
+    const fileContents = await fileResponse.text()
+    const contents = parse(fileContents)
+    for (const content of contents) {
+      saveBlog(content.id, content.title, content.summary)
+    }
+  }
+  return batch.status
 }
 
 export function createRequests(
@@ -113,4 +129,37 @@ export function summarizePrompt(blog: { id: number; title: string; body: string 
     "title": {translated_title},
     "summary": {summary}
   }`
+}
+
+function parse(input: string): { title: string; summary: string; id: string }[] {
+  const result: { title: string; summary: string; id: string }[] = []
+
+  // Split the input into individual lines (JSON objects)
+  const lines = input.split('\n').filter((line) => line.trim() !== '')
+
+  for (const line of lines) {
+    try {
+      // Parse each line as JSON
+      const parsedLine = JSON.parse(line)
+
+      // Navigate to the content field
+      const content = parsedLine.response.body.choices[0].message.content as string
+
+      console.log(parsedLine.response.body.choices[0])
+      // Extract the JSON inside the code block
+      const jsonMatch = content.match(/```json\s*\n([\s\S]*?)\n```/)
+
+      if (jsonMatch && jsonMatch[1]) {
+        const jsonString = jsonMatch[1]
+
+        const jsonData = JSON.parse(jsonString)
+
+        result.push({ title: jsonData.title, summary: jsonData.summary, id: parsedLine.custom_id })
+      }
+    } catch (error) {
+      console.error('Error parsing line:', error)
+    }
+  }
+
+  return result
 }

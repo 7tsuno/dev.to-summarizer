@@ -17,27 +17,34 @@ export async function summarizeBlogs(
     id: number
     title: string
     body: string
-  }>,
-  key: string
+  }>
 ): Promise<string> {
   const model = 'gpt-4o'
 
   const requests = createRequests(blogs, model)
   // バッチリクエストを作成してバッチIDを取得
-  const batchId = await createBatchRequest(requests, key)
+  const batchId = await createBatchRequest(requests)
 
   return batchId
 }
 
-export function saveBlog(id: string, md: string): void {
+export function saveBlog(id: string, title: string, summary: string): void {
   // ディレクトリが存在するか確認し、なければ作成
   ensureDirectoryExists(blogFilePath)
 
-  fs.writeFileSync(path.join(blogFilePath, `${id}.json`), md)
+  const writeDate = {
+    title,
+    summary
+  }
+
+  fs.writeFileSync(path.join(blogFilePath, `${id}.json`), JSON.stringify({ data: writeDate }))
 }
 
 export function loadBlog(id: string): object | null {
   ensureDirectoryExists(blogFilePath)
+  if (!fs.existsSync(path.join(blogFilePath, `${id}.json`))) {
+    return null
+  }
   if (fs.existsSync(blogFilePath)) {
     const fileData = JSON.parse(fs.readFileSync(path.join(blogFilePath, `${id}.json`), 'utf-8'))
     return fileData.data

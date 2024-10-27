@@ -14,3 +14,13 @@ export const saveKey = (key: string, value: string): void => {
 export const getKey = async (key: string): Promise<string> => {
   return window.store.getKey(key)
 }
+
+export const saveBatchId = (batchId: string, articleIds: number[]): void => {
+  articleIds.forEach((articleId) => {
+    saveKey(`batch_${articleId}`, batchId)
+  })
+}
+
+export const getBatchId = async (articleId: number): Promise<string> => {
+  return await getKey(`batch_${articleId}`)
+}

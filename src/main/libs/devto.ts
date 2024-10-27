@@ -2,16 +2,16 @@ const API_BASE = 'https://dev.to/api'
 const ARTICLES = '/articles'
 import axios from 'axios'
 import { saveHistory } from './history'
+import { getDevToKey } from './keyStore'
 
 export async function searchDevTo(
-  key: string,
   searchObject: { tag: string; count: number; range: number }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> {
   const response = await axios.get(`${API_BASE}${ARTICLES}`, {
     headers: {
       accept: 'application/vnd.forem.api-v1+json',
-      'api-key': key
+      'api-key': getDevToKey()
     },
     params: {
       tag: searchObject.tag,
@@ -27,10 +27,7 @@ export async function searchDevTo(
   return response.data
 }
 
-export async function getArticleByIds(
-  key: string,
-  ids: Array<number>
-): Promise<
+export async function getArticleByIds(ids: Array<number>): Promise<
   Array<{
     id: number
     title: string
@@ -42,7 +39,7 @@ export async function getArticleByIds(
       const response = await axios.get(`${API_BASE}${ARTICLES}/${id}`, {
         headers: {
           accept: 'application/vnd.forem.api-v1+json',
-          'api-key': key
+          'api-key': getDevToKey()
         }
       })
       return {

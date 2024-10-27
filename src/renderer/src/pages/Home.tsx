@@ -86,13 +86,12 @@ export function Home(): JSX.Element {
       return
     }
 
-    navigate('resultList', {
+    navigate('/resultList', {
       state: {
         tag: formState.tag,
         count: formState.count,
         range: formState.range,
-        executedAt: new Date(),
-        apiKey: devToApiKey
+        executedAt: new Date()
       }
     })
   }
@@ -158,7 +157,7 @@ export function Home(): JSX.Element {
       <header className="bg-primary text-primary-foreground p-4">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold">dev.to trend summarizer</h1>
-          <Button variant="ghost" onClick={async () => navigate('settings')}>
+          <Button variant="ghost" onClick={async () => navigate('/settings')}>
             <Settings className="h-5 w-5 mr-2" />
             設定
           </Button>
@@ -252,7 +251,7 @@ export function Home(): JSX.Element {
                   <Button
                     variant="link"
                     className="mt-2 w-full"
-                    onClick={() => navigate('history')}
+                    onClick={() => navigate('/history')}
                   >
                     もっと見る
                     <ChevronRight className="ml-2 h-4 w-4" />
