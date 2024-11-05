@@ -6,7 +6,6 @@ import { Checkbox } from '../components/ui/checkbox'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { invoke } from '@renderer/utils/IPC'
 import { getBatchId, saveBatchId } from '@renderer/utils/store'
-import ReactMarkdown from 'react-markdown'
 
 export function ResultList(): JSX.Element {
   const navigate = useNavigate()
@@ -136,7 +135,62 @@ export function ResultList(): JSX.Element {
     )
   }
 
-  console.log(blogList)
+  // 簡易的なMarkdown解析関数
+  const parseMarkdown = (markdown: string): JSX.Element[] => {
+    let lines: string[]
+    try {
+      lines = markdown.split('\n')
+    } catch (error) {
+      lines = JSON.stringify(markdown).split('\n')
+    }
+    return lines.map((line, index) => {
+      // 見出し
+      if (line.startsWith('# ')) {
+        return (
+          <h1 key={index} className="text-2xl font-bold my-4">
+            {line.slice(2)}
+          </h1>
+        )
+      }
+      if (line.startsWith('## ')) {
+        return (
+          <h2 key={index} className="text-xl font-bold my-3">
+            {line.slice(3)}
+          </h2>
+        )
+      }
+      if (line.startsWith('### ')) {
+        return (
+          <h3 key={index} className="text-lg font-bold my-2">
+            {line.slice(4)}
+          </h3>
+        )
+      }
+      // リスト
+      if (line.startsWith('- ')) {
+        return (
+          <li key={index} className="ml-4">
+            {line.slice(2)}
+          </li>
+        )
+      }
+      // 強調
+      if (line.includes('**')) {
+        const parts = line.split('**')
+        return (
+          <p key={index} className="my-2">
+            {parts.map((part, i) => (i % 2 === 0 ? part : <strong key={i}>{part}</strong>))}
+          </p>
+        )
+      }
+      // 通常のテキスト
+      return (
+        <p key={index} className="my-2">
+          {line}
+        </p>
+      )
+    })
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -223,7 +277,7 @@ export function ResultList(): JSX.Element {
                             minute: '2-digit'
                           })}
                         </p>
-                        {blog.batchId && blog.blogData === undefined && (
+                        {blog.batchId && blog.blogData == null && (
                           <div className="flex-1">
                             <p className="text-sm text-muted-foreground mb-2">要約リクエスト済み</p>
 
@@ -256,8 +310,8 @@ export function ResultList(): JSX.Element {
                                 <h4 className="font-semibold mb-2">
                                   翻訳タイトル: {blog.blogData.title}
                                 </h4>
-                                <div className="prose prose-sm max-w-none">
-                                  <ReactMarkdown>{blog.blogData.summary}</ReactMarkdown>
+                                <div className="markdown-content">
+                                  {parseMarkdown(blog.blogData.summary)}
                                 </div>
                               </div>
                             )}

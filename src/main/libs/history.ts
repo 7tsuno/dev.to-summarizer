@@ -47,15 +47,20 @@ export function listHistories(): Array<{
   // ディレクトリが存在するか確認し、なければ作成
   ensureDirectoryExists(historyFilePath)
   if (fs.existsSync(historyFilePath)) {
-    return fs.readdirSync(historyFilePath).map((fileName) => {
-      const data = JSON.parse(fs.readFileSync(path.join(historyFilePath, fileName), 'utf-8'))
-      return {
-        executedAt: data.executedAt,
-        tag: data.params.tag,
-        count: data.params.count,
-        range: data.params.range
-      }
-    })
+    return fs
+      .readdirSync(historyFilePath)
+      .map((fileName) => {
+        const data = JSON.parse(fs.readFileSync(path.join(historyFilePath, fileName), 'utf-8'))
+        return {
+          executedAt: data.executedAt,
+          tag: data.params.tag,
+          count: data.params.count,
+          range: data.params.range
+        }
+      })
+      .sort((a, b) => {
+        return dayjs(b.executedAt).diff(dayjs(a.executedAt))
+      })
   }
   return []
 }
