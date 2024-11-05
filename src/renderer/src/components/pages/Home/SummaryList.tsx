@@ -1,7 +1,7 @@
 // components/SummaryList.tsx
 import React from 'react'
 import { ChevronRight } from 'lucide-react'
-import { Button } from '../../ui/button'
+import { Button } from '@renderer/components/ui/button'
 
 type SummaryListProps = {
   summaries: Array<{ executedAt: string; tag: string; count: number; range: number }>

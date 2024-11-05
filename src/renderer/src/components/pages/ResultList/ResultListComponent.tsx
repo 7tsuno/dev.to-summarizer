@@ -1,132 +1,55 @@
-import { useEffect, useState } from 'react'
-import { Button } from '../components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { ArrowLeftIcon, ChevronDown, ChevronUp, Settings } from 'lucide-react'
-import { Checkbox } from '../components/ui/checkbox'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { invoke } from '@renderer/utils/IPC'
-import { getBatchId, saveBatchId } from '@renderer/utils/store'
-import { marked } from 'marked'
+// presenters/ResultListComponent.tsx
+import React from 'react'
+import { ArrowLeftIcon, ChevronDown, ChevronUp } from 'lucide-react'
 import DOMPurify from 'dompurify'
+import { marked } from 'marked'
+import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
+import { Button } from '@renderer/components/ui/button'
+import { Checkbox } from '@renderer/components/ui/checkbox'
+import MainTemplate from '@renderer/components/template/MainTemplate'
 
-export function ResultList(): JSX.Element {
-  const navigate = useNavigate()
-  const location = useLocation()
-
-  const state = location.state as {
+type ResultListComponentProps = {
+  blogList: Array<{
+    id: number
+    title: string
+    batchId?: string
+    blogData?: { title: string; summary: string }
+    published_timestamp: Date
+  }>
+  selectedArticles: number[]
+  expandedSummaries: number[]
+  state: {
     tag: string
     count: string
     range: string
     executedAt: Date
   }
+  navigate: (path: string) => void
+  onArticleSelect: (id: number) => void
+  onTranslateAndSummarize: () => void
+  onCheckSummarized: (id: string) => void
+  onToggleSummary: (id: number) => void
+  onToggleSelectAll: () => void
+}
 
-  const [blogList, setBlogList] = useState<
-    Array<{
-      id: number
-      title: string
-      batchId?: string
-      blogData?: {
-        title: string
-        summary: string
-      }
-      published_timestamp: Date
-    }>
-  >([])
-
-  const [selectedArticles, setSelectedArticles] = useState<number[]>([])
-  const [expandedSummaries, setExpandedSummaries] = useState<number[]>([])
-
-  useEffect(() => {
-    const onload = async (): Promise<void> => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await invoke<any, Array<any>>('load-history', state.executedAt.toISOString())
-      const convertedResult = await Promise.all(
-        result.map(async (blog) => ({
-          ...blog,
-          batchId: await getBatchId(blog.id),
-          blogData: await invoke<
-            string,
-            {
-              title: string
-              summary: string
-            }
-          >('loadBlog', String(blog.id))
-        }))
-      )
-      setBlogList(convertedResult)
-    }
-    onload()
-  }, [])
-
-  const handleArticleSelect = (id: number): void => {
-    setSelectedArticles((prev) =>
-      prev.includes(id) ? prev.filter((articleId) => articleId !== id) : [...prev, id]
-    )
-  }
-
-  const handleTranslateAndSummarize = async (): Promise<void> => {
-    const batchId = await invoke<unknown, string>('summarize', selectedArticles)
-    saveBatchId(batchId, selectedArticles)
-
-    setBlogList(
-      blogList.map((blog) => {
-        if (selectedArticles.includes(blog.id)) {
-          return { ...blog, batchId }
-        }
-        return blog
-      })
-    )
-
-    navigate('/')
-  }
-
-  const checkSummarized = async (id: string): Promise<void> => {
-    const status = await invoke<string, string>('getBatchStatus', id)
-    if (status === 'completed') {
-      const newBlogList = await Promise.all(
-        blogList.map(async (blog) => {
-          if (blog.batchId === id) {
-            const blogData = await invoke<
-              string,
-              {
-                title: string
-                summary: string
-              }
-            >('loadBlog', String(blog.id))
-            return { ...blog, blogData }
-          }
-          return blog
-        })
-      )
-
-      setBlogList(newBlogList)
-    }
-  }
-
-  const toggleSummary = (id: number): void => {
-    setExpandedSummaries((prev) =>
-      prev.includes(id) ? prev.filter((summaryId) => summaryId !== id) : [...prev, id]
-    )
-  }
-
+const ResultListComponent: React.FC<ResultListComponentProps> = ({
+  blogList,
+  selectedArticles,
+  expandedSummaries,
+  state,
+  navigate,
+  onArticleSelect,
+  onTranslateAndSummarize,
+  onCheckSummarized,
+  onToggleSummary,
+  onToggleSelectAll
+}) => {
   const summaryMarked = (summary: string): string => {
-    console.log(summary)
-
     return marked(DOMPurify.sanitize(summary)) as string
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="bg-primary text-primary-foreground p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">dev.to trend summarizer</h1>
-          <Button variant="ghost" onClick={() => navigate('/settings')}>
-            <Settings className="h-5 w-5 mr-2" />
-            設定
-          </Button>
-        </div>
-      </header>
-
+    <MainTemplate>
       <main className="flex-grow container mx-auto p-4 md:flex md:space-x-4">
         <div className="w-full space-y-4">
           <div className="flex items-center justify-between mb-4">
@@ -160,10 +83,7 @@ export function ResultList(): JSX.Element {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const allIds = blogList
-                      .filter((blog) => blog.batchId === undefined)
-                      .map((blog) => blog.id)
-                    setSelectedArticles(selectedArticles.length === allIds.length ? [] : allIds)
+                    onToggleSelectAll()
                   }}
                 >
                   {selectedArticles.length ===
@@ -179,7 +99,7 @@ export function ResultList(): JSX.Element {
                       <Checkbox
                         id={`article-${blog.id}`}
                         checked={selectedArticles.includes(blog.id)}
-                        onCheckedChange={() => handleArticleSelect(blog.id)}
+                        onCheckedChange={() => onArticleSelect(blog.id)}
                         disabled={blog.batchId !== undefined}
                         className="mt-1"
                       />
@@ -191,7 +111,6 @@ export function ResultList(): JSX.Element {
                           {blog.title}
                         </label>
                         <p className="text-sm text-muted-foreground mb-2">
-                          {' '}
                           {new Date(blog.published_timestamp).toLocaleString('ja-JP', {
                             year: 'numeric',
                             month: '2-digit',
@@ -200,14 +119,13 @@ export function ResultList(): JSX.Element {
                             minute: '2-digit'
                           })}
                         </p>
-                        {blog.batchId && blog.blogData == null && (
+                        {blog.batchId && !blog.blogData && (
                           <div className="flex-1">
                             <p className="text-sm text-muted-foreground mb-2">要約リクエスト済み</p>
-
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => blog.batchId && checkSummarized(blog.batchId)}
+                              onClick={() => onCheckSummarized(blog.batchId!)}
                             >
                               要約状況を確認する
                             </Button>
@@ -218,7 +136,7 @@ export function ResultList(): JSX.Element {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => toggleSummary(blog.id)}
+                              onClick={() => onToggleSummary(blog.id)}
                               className="mb-2"
                             >
                               要約を{expandedSummaries.includes(blog.id) ? '非表示' : '表示'}
@@ -251,7 +169,7 @@ export function ResultList(): JSX.Element {
               <div className="mt-6">
                 <Button
                   className="w-full"
-                  onClick={handleTranslateAndSummarize}
+                  onClick={onTranslateAndSummarize}
                   disabled={selectedArticles.length === 0}
                 >
                   選択した記事を翻訳して要約する
@@ -261,6 +179,8 @@ export function ResultList(): JSX.Element {
           </Card>
         </div>
       </main>
-    </div>
+    </MainTemplate>
   )
 }
+
+export default ResultListComponent

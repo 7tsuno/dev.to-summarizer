@@ -25,7 +25,7 @@ export const useSummariseHistory = (): {
   const handleHistoryClick = useCallback(
     (history: HistoryItem) => {
       navigate('resultList', {
-        state: { ...history, executedAt: new Date(history.executedAt), isHistory: true }
+        state: { ...history, executedAt: new Date(history.executedAt) }
       })
     },
     [navigate]

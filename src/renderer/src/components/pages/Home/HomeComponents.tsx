@@ -1,11 +1,11 @@
 // presenters/HomePresenter.tsx
 import React from 'react'
-import { Button } from '../../ui/button'
-import { Input } from '../../ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card'
 import { SearchIcon } from 'lucide-react'
 import SummaryList from './SummaryList'
 import MainTemplate from '@renderer/components/template/MainTemplate'
+import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
+import { Input } from '@renderer/components/ui/input'
+import { Button } from '@renderer/components/ui/button'
 
 type HomePresenterProps = {
   formState: { tag: string; count: string; range: string }

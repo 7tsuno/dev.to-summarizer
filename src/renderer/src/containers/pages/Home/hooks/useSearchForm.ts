@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getKey } from '@renderer/utils/store'
+import { invoke } from '@renderer/utils/IPC'
 
 type FormState = {
   tag: string
@@ -68,10 +69,19 @@ export const useSearchForm = (): {
         return
       }
 
+      const executedAt = await invoke<{ tag: string; count: number; range: number }, string>(
+        'search',
+        {
+          tag: formState.tag,
+          count: parseInt(formState.count),
+          range: parseInt(formState.range)
+        }
+      )
+
       navigate('/resultList', {
         state: {
           ...formState,
-          executedAt: new Date()
+          executedAt: new Date(executedAt)
         }
       })
     },

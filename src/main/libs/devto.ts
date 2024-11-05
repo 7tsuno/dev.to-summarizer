@@ -7,7 +7,7 @@ import { getDevToKey } from './keyStore'
 export async function searchDevTo(
   searchObject: { tag: string; count: number; range: number }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<any> {
+): Promise<string> {
   const response = await axios.get(`${API_BASE}${ARTICLES}`, {
     headers: {
       accept: 'application/vnd.forem.api-v1+json',
@@ -19,12 +19,13 @@ export async function searchDevTo(
       top: searchObject.range
     }
   })
-  saveHistory(new Date().toISOString(), response.data, {
+  const executedAt = new Date().toISOString()
+  saveHistory(executedAt, response.data, {
     tag: searchObject.tag,
     count: searchObject.count,
     range: searchObject.range
   })
-  return response.data
+  return executedAt
 }
 
 export async function getArticleByIds(ids: Array<number>): Promise<
