@@ -9,6 +9,7 @@ export type Blog = {
   batchId?: string
   blogData?: { title: string; summary: string }
   published_timestamp: Date
+  status?: string
 }
 
 type UseBlogListProps = {

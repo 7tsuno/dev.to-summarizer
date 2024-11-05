@@ -15,6 +15,7 @@ type ResultListComponentProps = {
     batchId?: string
     blogData?: { title: string; summary: string }
     published_timestamp: Date
+    status?: string
   }>
   selectedArticles: number[]
   expandedSummaries: number[]
@@ -129,6 +130,9 @@ const ResultListComponent: React.FC<ResultListComponentProps> = ({
                             >
                               要約状況を確認する
                             </Button>
+                            {blog.status && (
+                              <p className="text-md mt-2 mb-2">Status : {blog.status}</p>
+                            )}
                           </div>
                         )}
                         {blog.blogData && (

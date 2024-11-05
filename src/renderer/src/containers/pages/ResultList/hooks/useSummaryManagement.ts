@@ -24,6 +24,15 @@ export const useSummaryManagement = (
   }
 
   const checkSummarized = async (batchId: string): Promise<void> => {
+    const updatedBlogList = await Promise.all(
+      blogList.map(async (blog) => {
+        if (blog.batchId === batchId) {
+          return { ...blog, status: '要約状況確認中...' }
+        }
+        return blog
+      })
+    )
+    setBlogList(updatedBlogList)
     const status = await invoke<string, string>('getBatchStatus', batchId)
     if (status === 'completed') {
       const updatedBlogList = await Promise.all(
@@ -34,6 +43,16 @@ export const useSummaryManagement = (
               String(blog.id)
             )
             return { ...blog, blogData }
+          }
+          return blog
+        })
+      )
+      setBlogList(updatedBlogList)
+    } else {
+      const updatedBlogList = await Promise.all(
+        blogList.map(async (blog) => {
+          if (blog.batchId === batchId) {
+            return { ...blog, status }
           }
           return blog
         })

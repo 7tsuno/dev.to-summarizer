@@ -8,7 +8,7 @@ const Header: React.FC = () => {
   const navigate = useNavigate()
 
   const handleSettingsClick = useCallback(() => {
-    navigate('settings')
+    navigate('/settings')
   }, [])
 
   return (

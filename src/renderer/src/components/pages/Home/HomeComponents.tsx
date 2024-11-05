@@ -118,7 +118,7 @@ const HomeComponent: React.FC<HomePresenterProps> = ({
               <SummaryList
                 summaries={summariseHistory}
                 onSummaryClick={handleHistoryClick}
-                limit={5}
+                limit={10}
                 onViewMore={() => navigate('/history')}
               />
             </CardContent>
