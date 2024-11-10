@@ -1,13 +1,8 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { getArticleByIds, searchDevTo } from './libs/devto'
-import { listHistories, loadHistory } from './libs/history'
-import { loadBlog, summarizeBlogs } from './libs/blog'
-import Store from 'electron-store'
-import { getBatchStatus } from './libs/gpt'
-const store = new Store({ encryptionKey: 'your-encryption-key' })
+import { apis } from './api'
 
 function createWindow(): void {
   // Create the browser window.
@@ -59,56 +54,7 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
-
-  // 検索処理
-  ipcMain.handle(
-    'search',
-    async (
-      _event,
-      object: {
-        tag: string
-        count: number
-        range: number
-      }
-    ) => {
-      return await searchDevTo({
-        tag: object.tag,
-        count: object.count,
-        range: object.range
-      })
-    }
-  )
-
-  ipcMain.handle('get-history', () => {
-    return listHistories()
-  })
-
-  ipcMain.handle('load-history', (_event, timestamp: string) => {
-    return loadHistory(timestamp)
-  })
-
-  ipcMain.handle('summarize', async (_event, ids: Array<number>) => {
-    const articles = await getArticleByIds(ids)
-    return await summarizeBlogs(articles)
-  })
-
-  ipcMain.handle('getKey', (_event, key: string) => {
-    return store.get(key)
-  })
-
-  ipcMain.handle('saveKey', (_event, key: string, value: string) => {
-    store.set(key, value)
-  })
-
-  ipcMain.handle('getBatchStatus', async (_event, batchId: string) => {
-    return await getBatchStatus(batchId)
-  })
-
-  ipcMain.handle('loadBlog', async (_event, id: string) => {
-    return loadBlog(id)
-  })
+  apis()
 
   createWindow()
 

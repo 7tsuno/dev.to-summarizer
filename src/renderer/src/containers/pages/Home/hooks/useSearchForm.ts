@@ -1,8 +1,8 @@
 // hooks/useSearchForm.ts
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getKey } from '@renderer/utils/store'
 import { invoke } from '@renderer/utils/IPC'
+import { getKey } from '@renderer/api/store'
 
 type FormState = {
   tag: string

@@ -1,7 +1,7 @@
 // hooks/useBlogList.ts
 import { useState, useEffect } from 'react'
 import { invoke } from '@renderer/utils/IPC'
-import { getBatchId } from '@renderer/utils/store'
+import { getBatchId } from '@renderer/api/store'
 
 export type Blog = {
   id: number

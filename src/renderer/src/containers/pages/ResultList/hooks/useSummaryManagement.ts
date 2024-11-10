@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { invoke } from '@renderer/utils/IPC'
 import { Blog } from './useBlogList'
 import { useNavigate } from 'react-router-dom'
-import { saveBatchId } from '@renderer/utils/store'
+import { saveBatchId } from '@renderer/api/store'
 
 export const useSummaryManagement = (
   blogList: Blog[],

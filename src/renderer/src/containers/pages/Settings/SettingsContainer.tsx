@@ -1,8 +1,8 @@
 // containers/SettingsContainer.tsx
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getKey, saveKey } from '@renderer/utils/store'
 import SettingsComponent from '@renderer/components/pages/Settings/SettingsComponent'
+import { getKey, saveKey } from '@renderer/api/store'
 
 const SettingsContainer: React.FC = () => {
   const navigate = useNavigate()
