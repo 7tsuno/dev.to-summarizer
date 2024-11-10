@@ -67,7 +67,9 @@ export const apis = (): void => {
     return store.get(key)
   })
 
-  ipcMain.handle('key.save', (_event, key: string, value: string) => {
-    store.set(key, value)
+  ipcMain.handle('key.save', (_event, params: { key: string; value: string }) => {
+    console.log('key.save', params.key, params.value)
+
+    store.set(params.key, params.value)
   })
 }

@@ -9,13 +9,17 @@ const getKey = async (key: string): Promise<string> => {
 }
 
 const saveBatchId = (batchId: string, articleIds: number[]): void => {
+  console.log('saveBatchId', batchId, articleIds)
+
   articleIds.forEach((articleId) => {
     invoke('key.save', { key: `batch_${articleId}`, value: batchId })
   })
 }
 
 const getBatchId = async (articleId: number): Promise<string> => {
-  return invoke('key.get', `batch_${articleId}`)
+  const result = await invoke('key.get', `batch_${articleId}`)
+  console.log('getBatchId', articleId, result)
+  return result as string
 }
 
 export const store = {
