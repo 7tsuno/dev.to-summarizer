@@ -4,36 +4,38 @@ import fs from 'fs'
 import path from 'path'
 import { app } from 'electron'
 
-const blogFilePath = path.join(app.getPath('userData'), 'blog')
+const articleFilePath = path.join(app.getPath('userData'), 'article')
 
-export const blog = {
+export const article = {
   requestSummarize: async (
-    blogs: Array<{
+    articles: Array<{
       id: number
       title: string
       body: string
     }>
   ): Promise<string> => {
     const model = 'gpt-4o'
-    const requests = createRequests(blogs, model)
+    const requests = createRequests(articles, model)
     const batchId = await createBatchRequest(requests)
     return batchId
   },
   save: async (id: string, title: string, summary: string): Promise<void> => {
-    ensureDirectoryExists(blogFilePath)
+    ensureDirectoryExists(articleFilePath)
     const writeDate = {
       title,
       summary
     }
-    fs.writeFileSync(path.join(blogFilePath, `${id}.json`), JSON.stringify({ data: writeDate }))
+    fs.writeFileSync(path.join(articleFilePath, `${id}.json`), JSON.stringify({ data: writeDate }))
   },
   load: async (id: string): Promise<object | null> => {
-    ensureDirectoryExists(blogFilePath)
-    if (!fs.existsSync(path.join(blogFilePath, `${id}.json`))) {
+    ensureDirectoryExists(articleFilePath)
+    if (!fs.existsSync(path.join(articleFilePath, `${id}.json`))) {
       return null
     }
-    if (fs.existsSync(blogFilePath)) {
-      const fileData = JSON.parse(fs.readFileSync(path.join(blogFilePath, `${id}.json`), 'utf-8'))
+    if (fs.existsSync(articleFilePath)) {
+      const fileData = JSON.parse(
+        fs.readFileSync(path.join(articleFilePath, `${id}.json`), 'utf-8')
+      )
       return fileData.data
     }
     return null

@@ -1,9 +1,9 @@
 import { ipcMain } from 'electron'
-import { listHistories, loadHistory } from './libs/history'
-import { getArticleByIds, searchDevTo } from './libs/devto'
+import { listHistories, loadHistory, saveHistory } from './libs/history'
 import { getBatchStatus, getContents } from './libs/gpt'
 import Store from 'electron-store'
-import { blog } from './api/blog'
+import { devTo } from './api/devTo'
+import { article } from './api/article'
 const store = new Store({ encryptionKey: 'your-encryption-key' })
 
 export const apis = (): void => {
@@ -17,7 +17,13 @@ export const apis = (): void => {
         range: number
       }
     ) => {
-      return await searchDevTo({
+      const articles = await devTo.searchArticles({
+        tag: object.tag,
+        count: object.count,
+        range: object.range
+      })
+
+      return saveHistory(articles.executedAt, articles.data, {
         tag: object.tag,
         count: object.count,
         range: object.range
@@ -34,8 +40,8 @@ export const apis = (): void => {
   })
 
   ipcMain.handle('summarize', async (_event, ids: Array<number>) => {
-    const articles = await getArticleByIds(ids)
-    return await blog.requestSummarize(articles)
+    const articles = await devTo.getArticleByIds(ids)
+    return await article.requestSummarize(articles)
   })
 
   ipcMain.handle('getKey', (_event, key: string) => {
@@ -51,13 +57,13 @@ export const apis = (): void => {
     if (result.status === 'complete' && result.outputId) {
       const contents = await getContents(result.outputId)
       contents.forEach((content) => {
-        blog.save(content.id, content.title, content.summary)
+        article.save(content.id, content.title, content.summary)
       })
     }
     return result.status
   })
 
   ipcMain.handle('loadBlog', async (_event, id: string) => {
-    return blog.load(id)
+    return article.load(id)
   })
 }

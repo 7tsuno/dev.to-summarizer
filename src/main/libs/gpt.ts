@@ -111,7 +111,7 @@ export function createRequests(
   })
 }
 
-export function summarizePrompt(blog: { id: number; title: string; body: string }): string {
+function summarizePrompt(blog: { id: number; title: string; body: string }): string {
   return `# Request  
   You are a skilled engineer and translator. Please read the following blog and summarize its main points in Japanese.
   
