@@ -1,9 +1,9 @@
 import { ipcMain } from 'electron'
 import { listHistories, loadHistory } from './libs/history'
 import { getArticleByIds, searchDevTo } from './libs/devto'
-import { loadBlog, summarizeBlogs } from './libs/blog'
-import { getBatchStatus } from './libs/gpt'
+import { getBatchStatus, getContents } from './libs/gpt'
 import Store from 'electron-store'
+import { blog } from './api/blog'
 const store = new Store({ encryptionKey: 'your-encryption-key' })
 
 export const apis = (): void => {
@@ -35,7 +35,7 @@ export const apis = (): void => {
 
   ipcMain.handle('summarize', async (_event, ids: Array<number>) => {
     const articles = await getArticleByIds(ids)
-    return await summarizeBlogs(articles)
+    return await blog.requestSummarize(articles)
   })
 
   ipcMain.handle('getKey', (_event, key: string) => {
@@ -47,10 +47,17 @@ export const apis = (): void => {
   })
 
   ipcMain.handle('getBatchStatus', async (_event, batchId: string) => {
-    return await getBatchStatus(batchId)
+    const result = await getBatchStatus(batchId)
+    if (result.status === 'complete' && result.outputId) {
+      const contents = await getContents(result.outputId)
+      contents.forEach((content) => {
+        blog.save(content.id, content.title, content.summary)
+      })
+    }
+    return result.status
   })
 
   ipcMain.handle('loadBlog', async (_event, id: string) => {
-    return loadBlog(id)
+    return blog.load(id)
   })
 }

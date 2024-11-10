@@ -3,7 +3,6 @@ import path from 'path'
 import OpenAI from 'openai'
 import { app } from 'electron'
 import { getOpenAIKey } from './keyStore'
-import { saveBlog } from './blog'
 
 export async function createBatchRequest(
   requests: Array<{
@@ -61,19 +60,26 @@ export async function createBatchRequest(
   }
 }
 
-export async function getBatchStatus(batchId: string): Promise<string> {
+export async function getBatchStatus(
+  batchId: string
+): Promise<{ status: string; outputId: string | undefined }> {
   const openAI = new OpenAI({ apiKey: getOpenAIKey() })
   const batch = await openAI.batches.retrieve(batchId)
-  if (batch.status === 'completed' && batch.output_file_id) {
-    const fileId = batch.output_file_id
-    const fileResponse = await openAI.files.content(fileId)
-    const fileContents = await fileResponse.text()
-    const contents = parse(fileContents)
-    for (const content of contents) {
-      saveBlog(content.id, content.title, content.summary)
-    }
+  return {
+    status: batch.status,
+    outputId: batch.output_file_id
   }
-  return batch.status
+}
+
+export async function getContents(
+  batchOutputId: string
+): Promise<Array<{ title: string; summary: string; id: string }>> {
+  const openAI = new OpenAI({ apiKey: getOpenAIKey() })
+  const fileId = batchOutputId
+  const fileResponse = await openAI.files.content(fileId)
+  const fileContents = await fileResponse.text()
+  const contents = parse(fileContents)
+  return contents
 }
 
 export function createRequests(
