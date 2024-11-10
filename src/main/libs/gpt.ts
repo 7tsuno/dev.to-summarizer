@@ -13,39 +13,29 @@ export async function createBatchRequest(
   }>,
   endpoint: '/v1/chat/completions' | '/v1/embeddings' | '/v1/completions' = '/v1/chat/completions'
 ): Promise<string> {
-  // OpenAIクライアントの初期化
   const openai = new OpenAI({
     apiKey: getOpenAIKey()
   })
-
-  // バッチ入力ファイルのパスを設定
   const batchInputFilePath = path.join(app.getPath('userData'), 'batchinput.jsonl')
 
-  // バッチ入力ファイルを作成
   const batchInputStream = fs.createWriteStream(batchInputFilePath, { flags: 'w' })
 
   try {
     for (const request of requests) {
-      // リクエストをバッチ入力ファイルに書き込む
       batchInputStream.write(JSON.stringify(request) + '\n')
     }
 
-    // ストリームを閉じる
     batchInputStream.end()
 
-    // 書き込み完了を待つ
     await new Promise<void>((resolve, reject) => {
       batchInputStream.on('finish', resolve)
       batchInputStream.on('error', reject)
     })
-
-    // バッチ入力ファイルをOpenAIにアップロード
     const inputFile = await openai.files.create({
       file: fs.createReadStream(batchInputFilePath),
       purpose: 'batch'
     })
 
-    // バッチジョブを作成
     const batch = await openai.batches.create({
       input_file_id: inputFile.id,
       endpoint: endpoint,

@@ -1,50 +1,34 @@
+import { ensureDirectoryExists } from '../libs/file'
 import fs from 'fs'
 import path from 'path'
 import { app } from 'electron'
 import dayjs from 'dayjs'
 
 const historyFilePath = path.join(app.getPath('userData'), 'history')
-
 const FORMAT = 'YYYYMMDDTHH_mm_ss'
 
-// ディレクトリが存在しない場合は作成する関数
-function ensureDirectoryExists(dirPath: string): void {
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true }) // ディレクトリが存在しない場合は作成
-  }
-}
-
-export function saveHistory(
+const save = (
   timestamp: string,
   data: object,
-  params: {
-    tag: string
-    count: number
-    range: number
-  }
-): void {
-  // ディレクトリが存在するか確認し、なければ作成
+  params: { tag: string; count: number; range: number }
+): void => {
   ensureDirectoryExists(historyFilePath)
-
-  const writeDate = {
-    data,
-    params,
-    executedAt: timestamp
-  }
-
   fs.writeFileSync(
     path.join(historyFilePath, `${dayjs(timestamp).format(FORMAT)}.json`),
-    JSON.stringify(writeDate)
+    JSON.stringify({
+      data,
+      params,
+      executedAt: timestamp
+    })
   )
 }
 
-export function listHistories(): Array<{
+const list = (): Array<{
   executedAt: string
   tag: string
   count: number
   range: number
-}> {
-  // ディレクトリが存在するか確認し、なければ作成
+}> => {
   ensureDirectoryExists(historyFilePath)
   if (fs.existsSync(historyFilePath)) {
     return fs
@@ -65,8 +49,7 @@ export function listHistories(): Array<{
   return []
 }
 
-export function loadHistory(timestamp: string): object | null {
-  // ディレクトリが存在するか確認し、なければ作成
+const load = (timestamp: string): object | null => {
   ensureDirectoryExists(historyFilePath)
   if (fs.existsSync(historyFilePath)) {
     const fileData = JSON.parse(
@@ -78,4 +61,10 @@ export function loadHistory(timestamp: string): object | null {
     return fileData.data
   }
   return null
+}
+
+export const histories = {
+  save,
+  list,
+  load
 }
