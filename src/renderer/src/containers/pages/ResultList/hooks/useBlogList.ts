@@ -1,7 +1,8 @@
 // hooks/useBlogList.ts
 import { useState, useEffect } from 'react'
-import { invoke } from '@renderer/utils/IPC'
-import { getBatchId } from '@renderer/api/store'
+import { store } from '@renderer/api/store'
+import { histories } from '@renderer/api/histories'
+import { summarizedArticles } from '@renderer/api/summarizedArticles'
 
 export type Blog = {
   id: number
@@ -27,15 +28,13 @@ export const useBlogList = ({
   useEffect(() => {
     const loadBlogList = async (): Promise<void> => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await invoke<any, Blog[]>('load-history', executedAt.toISOString())
+      const result = await histories.load(executedAt.toISOString())
+      if (!result) return
       const convertedResult = await Promise.all(
         result.map(async (blog) => ({
           ...blog,
-          batchId: await getBatchId(blog.id),
-          blogData: await invoke<string, { title: string; summary: string }>(
-            'loadBlog',
-            String(blog.id)
-          )
+          batchId: await store.getBatchId(blog.id),
+          blogData: await summarizedArticles.load(blog.id.toString())
         }))
       )
       setBlogList(convertedResult)

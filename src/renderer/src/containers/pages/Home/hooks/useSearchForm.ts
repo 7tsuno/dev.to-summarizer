@@ -1,8 +1,8 @@
 // hooks/useSearchForm.ts
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { invoke } from '@renderer/utils/IPC'
-import { getKey } from '@renderer/api/store'
+import { store } from '@renderer/api/store'
+import { articles } from '@renderer/api/articles'
 
 type FormState = {
   tag: string
@@ -63,19 +63,16 @@ export const useSearchForm = (): {
     async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
       e.preventDefault()
 
-      const devToApiKey = await getKey('devTo')
+      const devToApiKey = await store.getKey('devTo')
       if (!devToApiKey) {
         setApiKeyError('APIキーが設定されていません')
         return
       }
 
-      const executedAt = await invoke<{ tag: string; count: number; range: number }, string>(
-        'search',
-        {
-          tag: formState.tag,
-          count: parseInt(formState.count),
-          range: parseInt(formState.range)
-        }
+      const executedAt = await articles.search(
+        formState.tag,
+        parseInt(formState.count),
+        parseInt(formState.range)
       )
 
       navigate('/resultList', {

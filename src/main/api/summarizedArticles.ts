@@ -14,16 +14,16 @@ const save = (id: string, title: string, summary: string): void => {
   fs.writeFileSync(path.join(articleFilePath, `${id}.json`), JSON.stringify({ data: writeDate }))
 }
 
-const load = (id: string): object | null => {
+const load = (id: string): { title: string; summary: string } | undefined => {
   ensureDirectoryExists(articleFilePath)
   if (!fs.existsSync(path.join(articleFilePath, `${id}.json`))) {
-    return null
+    return undefined
   }
   if (fs.existsSync(articleFilePath)) {
     const fileData = JSON.parse(fs.readFileSync(path.join(articleFilePath, `${id}.json`), 'utf-8'))
     return fileData.data
   }
-  return null
+  return undefined
 }
 
 export const summarizedArticles = {

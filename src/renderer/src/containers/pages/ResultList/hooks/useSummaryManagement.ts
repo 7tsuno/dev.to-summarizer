@@ -1,9 +1,10 @@
 // hooks/useSummaryManagement.ts
 import { useState } from 'react'
-import { invoke } from '@renderer/utils/IPC'
 import { Blog } from './useBlogList'
 import { useNavigate } from 'react-router-dom'
-import { saveBatchId } from '@renderer/api/store'
+import { store } from '@renderer/api/store'
+import { summarize } from '@renderer/api/summarize'
+import { summarizedArticles } from '@renderer/api/summarizedArticles'
 
 export const useSummaryManagement = (
   blogList: Blog[],
@@ -33,15 +34,12 @@ export const useSummaryManagement = (
       })
     )
     setBlogList(updatedBlogList)
-    const status = await invoke<string, string>('getBatchStatus', batchId)
+    const status = await summarize.getStatus(batchId)
     if (status === 'completed') {
       const updatedBlogList = await Promise.all(
         blogList.map(async (blog) => {
           if (blog.batchId === batchId) {
-            const blogData = await invoke<string, { title: string; summary: string }>(
-              'loadBlog',
-              String(blog.id)
-            )
+            const blogData = await summarizedArticles.load(blog.id.toString())
             return { ...blog, blogData }
           }
           return blog
@@ -62,8 +60,8 @@ export const useSummaryManagement = (
   }
 
   const translateAndSummarize = async (selectedArticles: number[]): Promise<void> => {
-    const batchId = await invoke<unknown, string>('summarize', selectedArticles)
-    saveBatchId(batchId, selectedArticles)
+    const batchId = await summarize.request(selectedArticles)
+    store.saveBatchId(batchId, selectedArticles)
 
     setBlogList(
       blogList.map((blog) => {

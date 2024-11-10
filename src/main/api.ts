@@ -24,11 +24,13 @@ export const apis = (): void => {
         range: object.range
       })
 
-      return histories.save(articles.executedAt, articles.data, {
+      histories.save(articles.executedAt, articles.data, {
         tag: object.tag,
         count: object.count,
         range: object.range
       })
+
+      return articles.executedAt
     }
   )
 

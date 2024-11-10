@@ -1,26 +1,26 @@
-declare global {
-  interface Window {
-    store: {
-      saveKey: (key: string, value: string) => void
-      getKey: (key: string) => Promise<string>
-    }
-  }
+import { invoke } from '@renderer/utils/IPC'
+
+const saveKey = (key: string, value: string): void => {
+  invoke('key.save', { key, value })
 }
 
-export const saveKey = (key: string, value: string): void => {
-  window.store.saveKey(key, value)
+const getKey = async (key: string): Promise<string> => {
+  return invoke('key.get', key)
 }
 
-export const getKey = async (key: string): Promise<string> => {
-  return window.store.getKey(key)
-}
-
-export const saveBatchId = (batchId: string, articleIds: number[]): void => {
+const saveBatchId = (batchId: string, articleIds: number[]): void => {
   articleIds.forEach((articleId) => {
-    saveKey(`batch_${articleId}`, batchId)
+    invoke('key.save', { key: `batch_${articleId}`, value: batchId })
   })
 }
 
-export const getBatchId = async (articleId: number): Promise<string> => {
-  return await getKey(`batch_${articleId}`)
+const getBatchId = async (articleId: number): Promise<string> => {
+  return invoke('key.get', `batch_${articleId}`)
+}
+
+export const store = {
+  saveKey,
+  getKey,
+  saveBatchId,
+  getBatchId
 }

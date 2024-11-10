@@ -49,7 +49,7 @@ const list = (): Array<{
   return []
 }
 
-const load = (timestamp: string): object | null => {
+const load = (timestamp: string): Array<{ id: number }> | null => {
   ensureDirectoryExists(historyFilePath)
   if (fs.existsSync(historyFilePath)) {
     const fileData = JSON.parse(

@@ -1,6 +1,6 @@
+import { histories } from '@renderer/api/histories'
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { invoke } from '@renderer/utils/IPC'
 
 type HistoryItem = {
   executedAt: string
@@ -17,9 +17,7 @@ export const useSummariseHistory = (): {
   const [summariseHistory, setSummariseHistory] = useState<HistoryItem[]>([])
 
   useEffect(() => {
-    invoke<undefined, HistoryItem[]>('get-history').then((histories) =>
-      setSummariseHistory(histories)
-    )
+    histories.list().then((histories) => setSummariseHistory(histories))
   }, [])
 
   const handleHistoryClick = useCallback(

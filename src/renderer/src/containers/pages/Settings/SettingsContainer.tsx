@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SettingsComponent from '@renderer/components/pages/Settings/SettingsComponent'
-import { getKey, saveKey } from '@renderer/api/store'
+import { store } from '@renderer/api/store'
 
 const SettingsContainer: React.FC = () => {
   const navigate = useNavigate()
@@ -15,8 +15,8 @@ const SettingsContainer: React.FC = () => {
   useEffect(() => {
     const loadApiKeys = async (): Promise<void> => {
       setApiKeys({
-        devTo: await getKey('devTo'),
-        openAI: await getKey('openAI')
+        devTo: await store.getKey('devTo'),
+        openAI: await store.getKey('openAI')
       })
     }
     loadApiKeys()
@@ -29,8 +29,8 @@ const SettingsContainer: React.FC = () => {
 
   const handleApiKeySave = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault()
-    saveKey('devTo', apiKeys.devTo)
-    saveKey('openAI', apiKeys.openAI)
+    store.saveKey('devTo', apiKeys.devTo)
+    store.saveKey('openAI', apiKeys.openAI)
     navigate('/')
   }
 
