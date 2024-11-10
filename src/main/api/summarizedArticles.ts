@@ -1,24 +1,11 @@
 import { ensureDirectoryExists } from '../libs/file'
-import { createBatchRequest, createRequests } from '../libs/gpt'
 import fs from 'fs'
 import path from 'path'
 import { app } from 'electron'
 
-const articleFilePath = path.join(app.getPath('userData'), 'article')
+const articleFilePath = path.join(app.getPath('userData'), 'summarizedArticles')
 
-export const article = {
-  requestSummarize: async (
-    articles: Array<{
-      id: number
-      title: string
-      body: string
-    }>
-  ): Promise<string> => {
-    const model = 'gpt-4o'
-    const requests = createRequests(articles, model)
-    const batchId = await createBatchRequest(requests)
-    return batchId
-  },
+export const summarizedArticles = {
   save: async (id: string, title: string, summary: string): Promise<void> => {
     ensureDirectoryExists(articleFilePath)
     const writeDate = {

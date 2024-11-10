@@ -3,7 +3,9 @@ import { listHistories, loadHistory, saveHistory } from './libs/history'
 import { getBatchStatus, getContents } from './libs/gpt'
 import Store from 'electron-store'
 import { devTo } from './api/devTo'
-import { article } from './api/article'
+import { summarizedArticles } from './api/summarizedArticles'
+import { summarize } from './api/summarize'
+import { parseGPTResult } from './libs/file'
 const store = new Store({ encryptionKey: 'your-encryption-key' })
 
 export const apis = (): void => {
@@ -41,7 +43,7 @@ export const apis = (): void => {
 
   ipcMain.handle('summarize', async (_event, ids: Array<number>) => {
     const articles = await devTo.getArticleByIds(ids)
-    return await article.requestSummarize(articles)
+    return await summarize.request(articles)
   })
 
   ipcMain.handle('getKey', (_event, key: string) => {
@@ -55,15 +57,16 @@ export const apis = (): void => {
   ipcMain.handle('getBatchStatus', async (_event, batchId: string) => {
     const result = await getBatchStatus(batchId)
     if (result.status === 'complete' && result.outputId) {
-      const contents = await getContents(result.outputId)
+      const fileContents = await getContents(result.outputId)
+      const contents = parseGPTResult(fileContents)
       contents.forEach((content) => {
-        article.save(content.id, content.title, content.summary)
+        summarizedArticles.save(content.id, content.title, content.summary)
       })
     }
     return result.status
   })
 
   ipcMain.handle('loadBlog', async (_event, id: string) => {
-    return article.load(id)
+    return summarizedArticles.load(id)
   })
 }
