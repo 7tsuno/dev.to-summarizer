@@ -68,8 +68,6 @@ export const apis = (): void => {
   })
 
   ipcMain.handle('key.save', (_event, params: { key: string; value: string }) => {
-    console.log('key.save', params.key, params.value)
-
     store.set(params.key, params.value)
   })
 }

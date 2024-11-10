@@ -22,7 +22,6 @@ const parseGPTResult = (input: string): { title: string; summary: string; id: st
     try {
       const parsedLine = JSON.parse(line)
       const content = parsedLine.response.body.choices[0].message.content as string
-      console.log(parsedLine.response.body.choices[0])
       const jsonMatch = content.match(/```json\s*\n([\s\S]*?)\n```/)
       if (jsonMatch && jsonMatch[1]) {
         const jsonString = jsonMatch[1]

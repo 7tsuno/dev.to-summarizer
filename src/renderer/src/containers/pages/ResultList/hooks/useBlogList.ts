@@ -37,8 +37,6 @@ export const useBlogList = ({
           blogData: await summarizedArticles.load(blog.id.toString())
         }))
       )
-      console.log('convertedResult', convertedResult)
-
       setBlogList(convertedResult)
     }
     loadBlogList()
