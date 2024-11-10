@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getKey, saveKey } from '@renderer/utils/store'
+import SettingsComponent from '@renderer/components/pages/Settings/SettingsComponent'
 
 const SettingsContainer: React.FC = () => {
   const navigate = useNavigate()
@@ -12,7 +13,7 @@ const SettingsContainer: React.FC = () => {
   })
 
   useEffect(() => {
-    const loadApiKeys = async () => {
+    const loadApiKeys = async (): Promise<void> => {
       setApiKeys({
         devTo: await getKey('devTo'),
         openAI: await getKey('openAI')
