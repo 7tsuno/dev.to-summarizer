@@ -32,6 +32,7 @@ type ResultListComponentProps = {
   onCheckSummarized: (id: string) => void
   onToggleSummary: (id: number) => void
   onToggleSelectAll: () => void
+  isLoading: boolean
 }
 
 const ResultListComponent: React.FC<ResultListComponentProps> = ({
@@ -44,7 +45,8 @@ const ResultListComponent: React.FC<ResultListComponentProps> = ({
   onTranslateAndSummarize,
   onCheckSummarized,
   onToggleSummary,
-  onToggleSelectAll
+  onToggleSelectAll,
+  isLoading
 }) => {
   const summaryMarked = (summary: string): string => {
     return marked(DOMPurify.sanitize(summary)) as string
@@ -134,7 +136,10 @@ const ResultListComponent: React.FC<ResultListComponentProps> = ({
                               要約状況を確認する
                             </Button>
                             {blog.status && (
-                              <p className="text-md mt-2 mb-2">Status : {blog.status}</p>
+                              <p className="text-sm text-muted-foreground mt-2 mb-2 flex items-center">
+                                <span className="font-medium mr-2">ステータス:</span>
+                                <span className="px-2 py-1 rounded-md bg-muted">{blog.status}</span>
+                              </p>
                             )}
                           </div>
                         )}
@@ -177,9 +182,35 @@ const ResultListComponent: React.FC<ResultListComponentProps> = ({
                 <Button
                   className="w-full"
                   onClick={onTranslateAndSummarize}
-                  disabled={selectedArticles.length === 0}
+                  disabled={selectedArticles.length === 0 || isLoading}
                 >
-                  選択した記事を翻訳して要約する
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <svg
+                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      要約処理中...
+                    </div>
+                  ) : (
+                    '選択した記事を翻訳して要約する'
+                  )}
                 </Button>
               </div>
             </CardContent>

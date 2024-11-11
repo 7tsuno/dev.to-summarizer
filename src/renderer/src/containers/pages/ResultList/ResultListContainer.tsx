@@ -1,5 +1,5 @@
 // containers/ResultListContainer.tsx
-import React from 'react'
+import React, { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useBlogList } from './hooks/useBlogList'
 import { useArticleSelection } from './hooks/useArticleSelection'
@@ -13,7 +13,7 @@ const ResultListContainer: React.FC = () => {
 
   const { blogList, setBlogList } = useBlogList({ executedAt: state.executedAt })
   const { selectedArticles, toggleArticleSelection, toggleSelectAll } = useArticleSelection()
-  const { expandedSummaries, toggleSummary, checkSummarized, translateAndSummarize } =
+  const { expandedSummaries, toggleSummary, checkSummarized, translateAndSummarize, isLoading } =
     useSummaryManagement(blogList, setBlogList)
 
   return (
@@ -28,6 +28,7 @@ const ResultListContainer: React.FC = () => {
       onCheckSummarized={checkSummarized}
       onToggleSummary={toggleSummary}
       onToggleSelectAll={() => toggleSelectAll(blogList)}
+      isLoading={isLoading}
     />
   )
 }

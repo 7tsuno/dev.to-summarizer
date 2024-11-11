@@ -42,7 +42,7 @@ export async function createBatchRequest(
       completion_window: '24h'
     })
 
-    console.log(`バッチジョブが作成されました。バッチID: ${batch.id}`)
+    console.log(`Created batch ID: ${batch.id}`)
 
     return batch.id
   } finally {

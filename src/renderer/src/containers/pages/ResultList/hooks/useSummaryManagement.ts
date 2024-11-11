@@ -1,7 +1,6 @@
 // hooks/useSummaryManagement.ts
 import { useState } from 'react'
 import { Blog } from './useBlogList'
-import { useNavigate } from 'react-router-dom'
 import { store } from '@renderer/api/store'
 import { summarize } from '@renderer/api/summarize'
 import { summarizedArticles } from '@renderer/api/summarizedArticles'
@@ -14,9 +13,10 @@ export const useSummaryManagement = (
   toggleSummary: (id: number) => void
   checkSummarized: (batchId: string) => Promise<void>
   translateAndSummarize: (selectedArticles: number[]) => Promise<void>
+  isLoading: boolean
 } => {
   const [expandedSummaries, setExpandedSummaries] = useState<number[]>([])
-  const navigate = useNavigate()
+  const [isLoading, setIsLoading] = useState(false)
 
   const toggleSummary = (id: number): void => {
     setExpandedSummaries((prev) =>
@@ -60,20 +60,23 @@ export const useSummaryManagement = (
   }
 
   const translateAndSummarize = async (selectedArticles: number[]): Promise<void> => {
-    const batchId = await summarize.request(selectedArticles)
-    store.saveBatchId(batchId, selectedArticles)
+    setIsLoading(true)
+    try {
+      const batchId = await summarize.request(selectedArticles)
+      store.saveBatchId(batchId, selectedArticles)
 
-    setBlogList(
-      blogList.map((blog) => {
-        if (selectedArticles.includes(blog.id)) {
-          return { ...blog, batchId }
-        }
-        return blog
-      })
-    )
-
-    navigate('/')
+      setBlogList(
+        blogList.map((blog) => {
+          if (selectedArticles.includes(blog.id)) {
+            return { ...blog, batchId }
+          }
+          return blog
+        })
+      )
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  return { expandedSummaries, toggleSummary, checkSummarized, translateAndSummarize }
+  return { expandedSummaries, toggleSummary, checkSummarized, translateAndSummarize, isLoading }
 }
