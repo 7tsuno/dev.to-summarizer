@@ -21,13 +21,13 @@ const parseGPTResult = (input: string): { title: string; summary: string; id: st
   for (const line of lines) {
     try {
       const parsedLine = JSON.parse(line)
-      const content = parsedLine.response.body.choices[0].message.content as string
-      const jsonMatch = content.match(/```json\s*\n([\s\S]*?)\n```/)
-      if (jsonMatch && jsonMatch[1]) {
-        const jsonString = jsonMatch[1]
-        const jsonData = JSON.parse(jsonString)
-        result.push({ title: jsonData.title, summary: jsonData.summary, id: parsedLine.custom_id })
-      }
+      const content = parsedLine.response.body.choices[0].message.content
+      const jsonData = JSON.parse(content)
+      result.push({
+        title: jsonData.title,
+        summary: jsonData.summary,
+        id: parsedLine.custom_id
+      })
     } catch (error) {
       console.error('Error parsing line:', error)
     }

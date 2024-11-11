@@ -63,9 +63,9 @@
 
 /* マークダウン用のスタイル */
 .markdown {
-  font-family: 'system-ui', sans-serif;
-  line-height: 1.6;
+  line-height: 1.8;
   color: #333;
+  font-size: 1.1rem;
 }
 
 /* 見出し */
@@ -129,18 +129,27 @@
 
 /* コードブロック */
 .markdown pre {
-  background-color: #f7fafc; /* Tailwindのbg-gray-100相当 */
+  background-color: #1a1b26;
+  border-radius: 0.5rem;
   padding: 1rem;
-  border-radius: 0.375rem;
+  margin: 1rem 0;
   overflow-x: auto;
-  font-size: 0.875rem; /* Tailwindのtext-sm相当 */
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
-.markdown code {
-  background-color: #edf2f7; /* Tailwindのbg-gray-200相当 */
-  padding: 0.125rem 0.25rem;
+.markdown pre code {
+  font-family: 'JetBrains Mono', 'Source Code Pro', 'Fira Code', monospace;
+  font-size: 0.9rem;
+  color: #a9b1d6;
+}
+
+/* インラインコード */
+.markdown p code {
+  background-color: #1a1b26;
+  padding: 0.2rem 0.4rem;
   border-radius: 0.25rem;
-  font-family: 'Menlo', monospace;
+  font-size: 0.9rem;
 }
 
 .dark .markdown {
@@ -170,14 +179,51 @@
 }
 
 .dark .markdown pre {
-  background-color: hsl(220 13% 16%);
+  background-color: #1a1b26;
 }
 
 .dark .markdown code {
-  background-color: hsl(220 13% 19%);
+  color: #a9b1d6;
 }
 
 .dark .markdown ul li,
 .dark .markdown ol li {
   color: hsl(220 13% 85%);
+}
+
+/* シンタックスハイライト用の色 */
+.markdown .keyword {
+  color: #bb9af7;
+}
+.markdown .string {
+  color: #9ece6a;
+}
+.markdown .comment {
+  color: #565f89;
+}
+.markdown .function {
+  color: #7aa2f7;
+}
+.markdown .number {
+  color: #ff9e64;
+}
+
+/* 長い文章の折り返し設定 */
+.markdown p {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* 水平線 */
+.markdown hr {
+  border: 0;
+  height: 1px;
+  background: hsl(220 13% 85%);
+  margin: 2rem 0;
+}
+
+.dark .markdown hr {
+  background: hsl(220 13% 35%);
 }
