@@ -30,30 +30,26 @@
     --radius: 0.5rem;
   }
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    --background: 220 13% 10%;
+    --foreground: 220 13% 90%;
+    --card: 220 13% 20%;
+    --card-foreground: 220 13% 90%;
+    --popover: 220 13% 13%;
+    --popover-foreground: 220 13% 90%;
+    --primary: 234 32% 53%;
+    --primary-foreground: 220 13% 98%;
+    --secondary: 220 13% 15%;
+    --secondary-foreground: 220 13% 90%;
+    --muted: 220 13% 15%;
+    --muted-foreground: 220 13% 70%;
+    --accent: 220 13% 15%;
+    --accent-foreground: 220 13% 90%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --destructive-foreground: 220 13% 90%;
+    --border: 220 13% 40%;
+    --input: 220 13% 15%;
+    --ring: 234 32% 53%;
+    --card-hovered: 220 13% 14%;
   }
 }
 @layer base {
@@ -145,4 +141,43 @@
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
   font-family: 'Menlo', monospace;
+}
+
+.dark .markdown {
+  color: hsl(220 13% 85%);
+}
+
+.dark .markdown h2 {
+  color: hsl(220 13% 95%);
+}
+
+.dark .markdown h4 {
+  color: hsl(220 13% 90%);
+}
+
+.dark .markdown a {
+  color: hsl(220 13% 75%);
+  text-decoration-color: hsl(220 13% 40%);
+}
+
+.dark .markdown a:hover {
+  color: hsl(220 13% 90%);
+}
+
+.dark .markdown blockquote {
+  border-left-color: hsl(220 13% 35%);
+  color: hsl(220 13% 75%);
+}
+
+.dark .markdown pre {
+  background-color: hsl(220 13% 16%);
+}
+
+.dark .markdown code {
+  background-color: hsl(220 13% 19%);
+}
+
+.dark .markdown ul li,
+.dark .markdown ol li {
+  color: hsl(220 13% 85%);
 }

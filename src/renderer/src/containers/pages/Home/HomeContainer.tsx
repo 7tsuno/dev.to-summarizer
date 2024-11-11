@@ -2,8 +2,8 @@
 import HomeComponent from '@renderer/components/pages/Home/HomeComponents'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSummariseHistory } from './hooks/useSummariseHistory'
 import { useSearchForm } from './hooks/useSearchForm'
+import { useSummariseHistory } from '@renderer/hooks/useSummariseHistory'
 
 const HomeContainer: React.FC = () => {
   const navigate = useNavigate()

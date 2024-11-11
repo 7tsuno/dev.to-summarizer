@@ -63,8 +63,20 @@ const load = (timestamp: string): Array<{ id: number }> | null => {
   return null
 }
 
+const deleteHistory = (executedAt: string): void => {
+  ensureDirectoryExists(historyFilePath)
+  if (fs.existsSync(historyFilePath)) {
+    fs.readdirSync(historyFilePath).forEach((fileName) => {
+      if (fileName.startsWith(`${dayjs(executedAt).format(FORMAT)}.json`)) {
+        fs.unlinkSync(path.join(historyFilePath, fileName))
+      }
+    })
+  }
+}
+
 export const histories = {
   save,
   list,
-  load
+  load,
+  delete: deleteHistory
 }

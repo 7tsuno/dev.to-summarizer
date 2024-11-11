@@ -42,6 +42,10 @@ export const apis = (): void => {
     return histories.load(timestamp)
   })
 
+  ipcMain.handle('histories.delete', (_event, executedAt: string) => {
+    return histories.delete(executedAt)
+  })
+
   ipcMain.handle('summarize.request', async (_event, ids: Array<number>) => {
     const articles = await devTo.getArticleByIds(ids)
     return await summarize.request(articles)
@@ -49,7 +53,7 @@ export const apis = (): void => {
 
   ipcMain.handle('summarize.getStatus', async (_event, batchId: string) => {
     const result = await getBatchStatus(batchId)
-    if (result.status === 'complete' && result.outputId) {
+    if (result.status === 'completed' && result.outputId) {
       const fileContents = await getContents(result.outputId)
       const contents = summarize.parseGPTResult(fileContents)
       contents.forEach((content) => {

@@ -16,6 +16,7 @@ type ResultListComponentProps = {
     blogData?: { title: string; summary: string }
     published_timestamp: Date
     status?: string
+    url: string
   }>
   selectedArticles: number[]
   expandedSummaries: number[]
@@ -106,8 +107,10 @@ const ResultListComponent: React.FC<ResultListComponentProps> = ({
                       />
                       <div className="flex-1">
                         <label
-                          htmlFor={`article-${blog.id}`}
                           className="text-lg font-semibold mb-2 block hover:underline cursor-pointer"
+                          onClick={() => {
+                            window.open(blog.url, '_blank')
+                          }}
                         >
                           {blog.title}
                         </label>
@@ -151,12 +154,12 @@ const ResultListComponent: React.FC<ResultListComponentProps> = ({
                               )}
                             </Button>
                             {expandedSummaries.includes(blog.id) && (
-                              <div className="bg-gray-100 p-4 rounded-md">
-                                <h4 className="font-semibold mb-2 text-3xl">
+                              <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800">
+                                <h4 className="font-bold mb-4 text-2xl text-slate-900 dark:text-slate-100">
                                   {blog.blogData.title}
                                 </h4>
                                 <div
-                                  className="markdown"
+                                  className="markdown prose dark:prose-invert max-w-none prose-slate prose-headings:font-semibold prose-p:text-slate-600 dark:prose-p:text-slate-300"
                                   dangerouslySetInnerHTML={{
                                     __html: summaryMarked(blog.blogData.summary)
                                   }}

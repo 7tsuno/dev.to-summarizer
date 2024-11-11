@@ -12,6 +12,7 @@ type HistoryItem = {
 export const useSummariseHistory = (): {
   summariseHistory: HistoryItem[]
   handleHistoryClick: (history: HistoryItem) => void
+  handleDeleteHistory: (executedAt: string) => Promise<void>
 } => {
   const navigate = useNavigate()
   const [summariseHistory, setSummariseHistory] = useState<HistoryItem[]>([])
@@ -22,12 +23,17 @@ export const useSummariseHistory = (): {
 
   const handleHistoryClick = useCallback(
     (history: HistoryItem) => {
-      navigate('resultList', {
+      navigate('/resultList', {
         state: { ...history, executedAt: new Date(history.executedAt) }
       })
     },
     [navigate]
   )
 
-  return { summariseHistory, handleHistoryClick }
+  const handleDeleteHistory = useCallback(async (executedAt: string) => {
+    await histories.delete(executedAt)
+    setSummariseHistory((prev) => prev.filter((h) => h.executedAt !== executedAt))
+  }, [])
+
+  return { summariseHistory, handleHistoryClick, handleDeleteHistory }
 }

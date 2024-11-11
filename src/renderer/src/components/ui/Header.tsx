@@ -4,7 +4,11 @@ import { Button } from '../ui/button'
 import { Settings } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-const Header: React.FC = () => {
+type HeaderProps = {
+  children?: React.ReactNode
+}
+
+const Header: React.FC<HeaderProps> = () => {
   const navigate = useNavigate()
 
   const handleSettingsClick = useCallback(() => {

@@ -39,14 +39,14 @@ const HomeComponent: React.FC<HomePresenterProps> = ({
 }) => {
   return (
     <MainTemplate>
-      <main className="flex-grow container mx-auto p-4 md:flex md:space-x-4">
-        <div className="md:w-3/4 space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>記事検索</CardTitle>
+      <main className="flex-grow container mx-auto p-4 md:flex md:space-x-6">
+        <div className="md:w-3/4 space-y-6">
+          <Card className="card-hover shadow-lg">
+            <CardHeader className="border-b border-border/30">
+              <CardTitle className="text-2xl">記事検索</CardTitle>
             </CardHeader>
-            <CardContent>
-              <form className="space-y-4" onSubmit={handleSubmit}>
+            <CardContent className="pt-6">
+              <form className="space-y-6" onSubmit={handleSubmit}>
                 <div>
                   <label htmlFor="tag" className="block text-sm font-medium mb-1">
                     タグ
@@ -118,7 +118,7 @@ const HomeComponent: React.FC<HomePresenterProps> = ({
               <SummaryList
                 summaries={summariseHistory}
                 onSummaryClick={handleHistoryClick}
-                limit={10}
+                limit={3}
                 onViewMore={() => navigate('/history')}
               />
             </CardContent>

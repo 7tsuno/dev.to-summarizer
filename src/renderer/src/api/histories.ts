@@ -13,11 +13,16 @@ const list = async (): Promise<
 
 const load = async (
   timestamp: string
-): Promise<Array<{ id: number; title: string; published_timestamp: Date }> | null> => {
+): Promise<Array<{ id: number; title: string; published_timestamp: Date; url: string }> | null> => {
   return invoke('histories.load', timestamp)
+}
+
+const deleteHistory = async (executedAt: string): Promise<void> => {
+  invoke('histories.delete', executedAt)
 }
 
 export const histories = {
   list,
-  load
+  load,
+  delete: deleteHistory
 }

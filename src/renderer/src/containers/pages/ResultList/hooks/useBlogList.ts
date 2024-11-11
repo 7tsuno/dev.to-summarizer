@@ -11,6 +11,7 @@ export type Blog = {
   blogData?: { title: string; summary: string }
   published_timestamp: Date
   status?: string
+  url: string
 }
 
 type UseBlogListProps = {
