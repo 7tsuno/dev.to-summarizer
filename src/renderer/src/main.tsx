@@ -1,3 +1,4 @@
+import 'highlight.js/styles/tokyo-night-dark.css'
 import './assets/main.css'
 
 import React from 'react'

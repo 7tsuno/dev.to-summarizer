@@ -160,8 +160,8 @@ const ResultListComponent: React.FC<ResultListComponentProps> = ({
                               )}
                             </Button>
                             {expandedSummaries.includes(blog.id) && (
-                              <div className="mr-10 bg-slate-50 dark:bg-slate-900 p-12 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800">
-                                <h4 className="font-bold mb-4 text-2xl text-slate-900 dark:text-slate-100">
+                              <div className="mr-10 bg-slate-50 dark:bg-gray-900 p-12 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800">
+                                <h4 className="font-bold mb-4 text-2xl text-stone-900 dark:text-slate-100">
                                   {blog.blogData.title}
                                 </h4>
                                 <div
