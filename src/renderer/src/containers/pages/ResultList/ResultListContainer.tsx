@@ -1,5 +1,5 @@
 // containers/ResultListContainer.tsx
-import React, { useState } from 'react'
+import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useBlogList } from './hooks/useBlogList'
 import { useArticleSelection } from './hooks/useArticleSelection'
