@@ -1,4 +1,4 @@
-# dev.to-summerizer
+# dev.to-summarizer
 
 An Electron application with React and TypeScript
 

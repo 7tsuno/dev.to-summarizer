@@ -1,3 +1,3 @@
 provider: generic
 url: https://example.com/auto-updates
-updaterCacheDirName: dev.to-summerizer-updater
+updaterCacheDirName: dev.to-summarizer-updater
