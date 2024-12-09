@@ -33,6 +33,7 @@ const list = (): Array<{
   if (fs.existsSync(historyFilePath)) {
     return fs
       .readdirSync(historyFilePath)
+      .filter((fileName) => fileName.endsWith('.json'))
       .map((fileName) => {
         const data = JSON.parse(fs.readFileSync(path.join(historyFilePath, fileName), 'utf-8'))
         return {
